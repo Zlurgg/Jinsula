@@ -387,7 +387,16 @@ No code is written during the planning sessions.
      two shared `AppModel` hooks (`confirmReading(_:)`, `shouldStartFreshEntry`); default
      bands made amount-free; amber darkened. Verified at the 4.7" layout floor (SE-2nd-gen
      sim); OS-floor (iOS 15) sign-off still physical-6s-only.
-   - Next: setup screen + PIN, retest reminder + widget, real persistence.
+   - ✅ **Session 7 — Setup screen built** (bands/units/contacts) + real settings persistence.
+   - ✅ **Session 8 — PIN gate built** (Keychain `PINStore` + PIN pad + setup gate); shipped to
+     the iPad as the MVP baseline for real-world testing. `ReadingsStore` demoted to v2.
+   - ✅ **Session 9 — Home Screen widget + retest reminder built.** Widget Extension target +
+     App Group `group.uk.co.zlurgg.Jinsula`; `WidgetSnapshot` written on confirm; `systemMedium`
+     card with `jinsula://check` (scheme registered in Info.plist — was missing). `ReminderService`
+     (UNUserNotificationCenter, +15/+30 min, fixed IDs) wired + unit-tested (first `JinsulaTests`
+     target). DEBUG interval shortened to 8s/16s for observation — must become a real setting
+     before release. Still open (own session): notification foreground/tap delegate + setup toggle.
+   - Next: app icon; finish reminder (foreground + tap + toggle); on-device verification.
 
 ## Open questions
 

@@ -6,14 +6,99 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6A6E8A2B3062E2C600E8B74A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A6E8A2A3062E2C600E8B74A /* WidgetKit.framework */; };
+		6A6E8A2D3062E2C600E8B74A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A6E8A2C3062E2C600E8B74A /* SwiftUI.framework */; };
+		6A6E8A3A3062E2C700E8B74A /* JinsulaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6A6E8A283062E2C600E8B74A /* JinsulaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6A6E8A383062E2C700E8B74A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A6E89C23062713100E8B74A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6A6E8A273062E2C600E8B74A;
+			remoteInfo = JinsulaWidgetExtension;
+		};
+		6A6E8A543062FE3D00E8B74A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A6E89C23062713100E8B74A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6A6E89C93062713100E8B74A;
+			remoteInfo = Jinsula;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6A6E8A3F3062E2C700E8B74A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6A6E8A3A3062E2C700E8B74A /* JinsulaWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		6A6E89CA3062713100E8B74A /* Jinsula.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jinsula.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A6E8A283062E2C600E8B74A /* JinsulaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = JinsulaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A6E8A2A3062E2C600E8B74A /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		6A6E8A2C3062E2C600E8B74A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		6A6E8A463062E5E900E8B74A /* JinsulaWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JinsulaWidgetExtension.entitlements; sourceTree = "<group>"; };
+		6A6E8A503062FE3D00E8B74A /* JinsulaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JinsulaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6A6E8A3B3062E2C700E8B74A /* Exceptions for "JinsulaWidget" folder in "JinsulaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6A6E8A273062E2C600E8B74A /* JinsulaWidgetExtension */;
+		};
+		6A6E8A433062E52D00E8B74A /* Exceptions for "Jinsula" folder in "JinsulaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/GuidanceBand.swift,
+				Models/WidgetSnapshot.swift,
+				Theme/Theme.swift,
+			);
+			target = 6A6E8A273062E2C600E8B74A /* JinsulaWidgetExtension */;
+		};
+		6A6E8A493062E92200E8B74A /* Exceptions for "Jinsula" folder in "Jinsula" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6A6E89C93062713100E8B74A /* Jinsula */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6A6E89CC3062713100E8B74A /* Jinsula */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6A6E8A493062E92200E8B74A /* Exceptions for "Jinsula" folder in "Jinsula" target */,
+				6A6E8A433062E52D00E8B74A /* Exceptions for "Jinsula" folder in "JinsulaWidgetExtension" target */,
+			);
 			path = Jinsula;
+			sourceTree = "<group>";
+		};
+		6A6E8A2E3062E2C600E8B74A /* JinsulaWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6A6E8A3B3062E2C700E8B74A /* Exceptions for "JinsulaWidget" folder in "JinsulaWidgetExtension" target */,
+			);
+			path = JinsulaWidget;
+			sourceTree = "<group>";
+		};
+		6A6E8A513062FE3D00E8B74A /* JinsulaTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = JinsulaTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +111,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6A6E8A253062E2C600E8B74A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A6E8A2D3062E2C600E8B74A /* SwiftUI.framework in Frameworks */,
+				6A6E8A2B3062E2C600E8B74A /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A6E8A4D3062FE3D00E8B74A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		6A6E89C13062713100E8B74A = {
 			isa = PBXGroup;
 			children = (
+				6A6E8A463062E5E900E8B74A /* JinsulaWidgetExtension.entitlements */,
 				6A6E89CC3062713100E8B74A /* Jinsula */,
+				6A6E8A2E3062E2C600E8B74A /* JinsulaWidget */,
+				6A6E8A513062FE3D00E8B74A /* JinsulaTests */,
+				6A6E8A293062E2C600E8B74A /* Frameworks */,
 				6A6E89CB3062713100E8B74A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +146,19 @@
 			isa = PBXGroup;
 			children = (
 				6A6E89CA3062713100E8B74A /* Jinsula.app */,
+				6A6E8A283062E2C600E8B74A /* JinsulaWidgetExtension.appex */,
+				6A6E8A503062FE3D00E8B74A /* JinsulaTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6A6E8A293062E2C600E8B74A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6A6E8A2A3062E2C600E8B74A /* WidgetKit.framework */,
+				6A6E8A2C3062E2C600E8B74A /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +171,12 @@
 				6A6E89C63062713100E8B74A /* Sources */,
 				6A6E89C73062713100E8B74A /* Frameworks */,
 				6A6E89C83062713100E8B74A /* Resources */,
+				6A6E8A3F3062E2C700E8B74A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				6A6E8A393062E2C700E8B74A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				6A6E89CC3062713100E8B74A /* Jinsula */,
@@ -69,6 +187,51 @@
 			productName = Jinsula;
 			productReference = 6A6E89CA3062713100E8B74A /* Jinsula.app */;
 			productType = "com.apple.product-type.application";
+		};
+		6A6E8A273062E2C600E8B74A /* JinsulaWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6A6E8A3C3062E2C700E8B74A /* Build configuration list for PBXNativeTarget "JinsulaWidgetExtension" */;
+			buildPhases = (
+				6A6E8A243062E2C600E8B74A /* Sources */,
+				6A6E8A253062E2C600E8B74A /* Frameworks */,
+				6A6E8A263062E2C600E8B74A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				6A6E8A2E3062E2C600E8B74A /* JinsulaWidget */,
+			);
+			name = JinsulaWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = JinsulaWidgetExtension;
+			productReference = 6A6E8A283062E2C600E8B74A /* JinsulaWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		6A6E8A4F3062FE3D00E8B74A /* JinsulaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6A6E8A563062FE3D00E8B74A /* Build configuration list for PBXNativeTarget "JinsulaTests" */;
+			buildPhases = (
+				6A6E8A4C3062FE3D00E8B74A /* Sources */,
+				6A6E8A4D3062FE3D00E8B74A /* Frameworks */,
+				6A6E8A4E3062FE3D00E8B74A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6A6E8A553062FE3D00E8B74A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				6A6E8A513062FE3D00E8B74A /* JinsulaTests */,
+			);
+			name = JinsulaTests;
+			packageProductDependencies = (
+			);
+			productName = JinsulaTests;
+			productReference = 6A6E8A503062FE3D00E8B74A /* JinsulaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -82,6 +245,13 @@
 				TargetAttributes = {
 					6A6E89C93062713100E8B74A = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					6A6E8A273062E2C600E8B74A = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					6A6E8A4F3062FE3D00E8B74A = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 6A6E89C93062713100E8B74A;
 					};
 				};
 			};
@@ -100,12 +270,28 @@
 			projectRoot = "";
 			targets = (
 				6A6E89C93062713100E8B74A /* Jinsula */,
+				6A6E8A273062E2C600E8B74A /* JinsulaWidgetExtension */,
+				6A6E8A4F3062FE3D00E8B74A /* JinsulaTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		6A6E89C83062713100E8B74A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A6E8A263062E2C600E8B74A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A6E8A4E3062FE3D00E8B74A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +308,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6A6E8A243062E2C600E8B74A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A6E8A4C3062FE3D00E8B74A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6A6E8A393062E2C700E8B74A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6A6E8A273062E2C600E8B74A /* JinsulaWidgetExtension */;
+			targetProxy = 6A6E8A383062E2C700E8B74A /* PBXContainerItemProxy */;
+		};
+		6A6E8A553062FE3D00E8B74A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6A6E89C93062713100E8B74A /* Jinsula */;
+			targetProxy = 6A6E8A543062FE3D00E8B74A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6A6E89D33062713200E8B74A /* Debug */ = {
@@ -246,6 +459,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Jinsula/Jinsula.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 98SYHTGCZG;
@@ -254,6 +468,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Jinsula/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -292,6 +507,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Jinsula/Jinsula.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 98SYHTGCZG;
@@ -300,6 +516,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Jinsula/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -333,6 +550,128 @@
 			};
 			name = Release;
 		};
+		6A6E8A3D3062E2C700E8B74A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = JinsulaWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98SYHTGCZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JinsulaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JinsulaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.zlurgg.Jinsula.JinsulaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6A6E8A3E3062E2C700E8B74A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = JinsulaWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98SYHTGCZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JinsulaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JinsulaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.zlurgg.Jinsula.JinsulaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6A6E8A573062FE3D00E8B74A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98SYHTGCZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.zlurgg.Jinsula.JinsulaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jinsula.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jinsula";
+			};
+			name = Debug;
+		};
+		6A6E8A583062FE3D00E8B74A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98SYHTGCZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.zlurgg.Jinsula.JinsulaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jinsula.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jinsula";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -350,6 +689,24 @@
 			buildConfigurations = (
 				6A6E89D63062713200E8B74A /* Debug */,
 				6A6E89D73062713200E8B74A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6A6E8A3C3062E2C700E8B74A /* Build configuration list for PBXNativeTarget "JinsulaWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A6E8A3D3062E2C700E8B74A /* Debug */,
+				6A6E8A3E3062E2C700E8B74A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6A6E8A563062FE3D00E8B74A /* Build configuration list for PBXNativeTarget "JinsulaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A6E8A573062FE3D00E8B74A /* Debug */,
+				6A6E8A583062FE3D00E8B74A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

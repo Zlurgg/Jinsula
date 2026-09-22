@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import WidgetKit
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -28,17 +29,21 @@ final class AppModel: ObservableObject {
     private let settingsStore: SettingsStoring
     private let readingsStore: ReadingsStoring
     private let pinStore: PINStoring
+    private let reminderService: ReminderService
 
-    /// Stores are injectable for tests; `nil` uses the JSON-/Keychain-backed defaults.
+    /// Collaborators are injectable for tests; `nil` uses the JSON-/Keychain-/
+    /// notification-backed defaults.
     init(settingsStore: SettingsStoring? = nil,
          readingsStore: ReadingsStoring? = nil,
-         pinStore: PINStoring? = nil) {
+         pinStore: PINStoring? = nil,
+         reminderService: ReminderService? = nil) {
         let settingsStore = settingsStore ?? SettingsStore()
         let readingsStore = readingsStore ?? ReadingsStore()
         let pinStore = pinStore ?? PINStore()
         self.settingsStore = settingsStore
         self.readingsStore = readingsStore
         self.pinStore = pinStore
+        self.reminderService = reminderService ?? ReminderService()
         self.settings = settingsStore.load()
         self.readings = readingsStore.load()
         self.hasPIN = pinStore.hasPIN
@@ -73,10 +78,14 @@ final class AppModel: ObservableObject {
     }
 
     /// Called when a low-band card's "Remind me in 15 minutes" is tapped.
-    /// The real scheduling lands in Session 3's `ReminderService`; this reserves
-    /// the call site so the confirm/result path isn't re-touched later.
+    /// Requests notification permission (contextually, on first tap) then
+    /// schedules the +15/+30 min nudges. Fire-and-forget: the card dismisses
+    /// immediately whether or not permission is granted (SPEC §1).
     func scheduleRetestReminder() {
-        // TODO (Session 3): ReminderService.scheduleRetest() (+15/+30 min).
+        Task {
+            await reminderService.requestAuthorization()
+            await reminderService.scheduleRetest()
+        }
     }
 
     /// Clears the open-entry intent after `DailyUseView` has consumed it.
@@ -112,13 +121,20 @@ final class AppModel: ObservableObject {
 
     /// A new confirmed reading supersedes any pending retest nudge.
     private func cancelRetestReminder() {
-        // TODO (Session 3): ReminderService.cancelRetest().
+        reminderService.cancelRetest()
     }
 
     /// Writes the tiny {value, unit, date, severity} snapshot to the App Group
-    /// container and reloads widget timelines.
+    /// container and reloads widget timelines, so the Home Screen widget shows
+    /// the reading grandma just confirmed (SPEC.md §2). Storing the matched
+    /// `severity` (not the bands) keeps the widget dumb — a colour and text.
     private func writeWidgetSnapshot(for reading: GlucoseReading,
                                      severity: GuidanceBand.Severity) {
-        // TODO (widget session): needs the App Group entitlement / real bundle ID.
+        let snapshot = WidgetSnapshot(value: reading.value,
+                                      unitLabel: reading.unit.shortLabel,
+                                      date: reading.date,
+                                      severity: severity)
+        WidgetSnapshotStore.write(snapshot)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }

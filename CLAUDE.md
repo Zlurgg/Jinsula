@@ -13,12 +13,16 @@ Models/
                            (+ default UK bands; SAFETY notes inline)
   BandEvaluator.swift    – pure fn: reading + [bands] → matched band (testable)
   AppSettings.swift      – all setup config + EmergencyContact; isLocked flag
+  WidgetSnapshot.swift   – shared {value, unitLabel, date, severity} + App-Group read/write
+                           (member of BOTH app + JinsulaWidget targets)
 ViewModels/
   AppModel.swift         – ObservableObject top-level state (@MainActor)
 Services/
   SettingsStore.swift    – JSON persistence for settings (real: atomic, safe-fallback)
   ReadingsStore.swift    – JSON persistence for readings (stub)
   PINStore.swift         – Keychain wrapper for the setup PIN (injectable; not in JSON)
+  ReminderService.swift  – UNUserNotificationCenter retest nudges (+15/+30 min, fixed IDs);
+                           injectable seam + intervals (⚠️ 8s/16s in DEBUG). Unit-tested.
   SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
   DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
@@ -29,8 +33,15 @@ Views/
   HistoryView.swift      – past readings list (placeholder)
 Theme/
   Theme.swift            – all fonts + band colours
-ContentView.swift        – root (currently → DailyUseView)
+ContentView.swift        – root (currently → DailyUseView); onOpenURL(jinsula://) → fresh entry
 JinsulaApp.swift         – @main, injects AppModel via .environmentObject
+```
+
+Other targets (siblings of `Jinsula/Jinsula/`):
+```
+JinsulaWidget/           – Widget Extension (systemMedium, iOS 15). Reads WidgetSnapshot,
+                           renders band colour + value/time, whole-widget jinsula://check.
+JinsulaTests/            – Swift Testing target (ReminderServiceTests; @testable import Jinsula).
 ```
 
 ## Conventions / constraints
@@ -47,4 +58,10 @@ JinsulaApp.swift         – @main, injects AppModel via .environmentObject
 - Shared hooks live on `AppModel`, not in views: `confirmReading(_:)` (fires only after a
   band matches), `shouldStartFreshEntry` (open-entry intent for widget/notification taps), and
   `commitSettings(_:)` (setup "Done" — persists + updates live state in one place).
-- Tests: Swift Testing framework; start with pure `BandEvaluator` tests.
+- **Widget stays dumb:** the extension never sees the bands, `BandEvaluator`, or settings —
+  only the `WidgetSnapshot` (colour via shared `Theme`). Data crosses via **App Group
+  `group.uk.co.zlurgg.Jinsula`** (capability on both targets). The `jinsula://` scheme is
+  registered in the app's Info.plist (`CFBundleURLTypes`) — without it the widget/notification
+  deep link is a silent no-op.
+- Tests: Swift Testing framework (target `JinsulaTests`); `ReminderService` covered — inject the
+  `UserNotificationScheduling` seam with a spy rather than hitting the real notification centre.
