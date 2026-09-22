@@ -16,13 +16,14 @@ Models/
 ViewModels/
   AppModel.swift         – ObservableObject top-level state (@MainActor)
 Services/
-  SettingsStore.swift    – JSON persistence for settings (stub)
+  SettingsStore.swift    – JSON persistence for settings (real: atomic, safe-fallback)
   ReadingsStore.swift    – JSON persistence for readings (stub)
   SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
   DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
   ResultCardView.swift   – full-screen colour guidance card, renders from band (BUILT)
-  SetupView.swift        – family-only config, behind the lock (placeholder)
+  SetupView.swift        – family-only config: Form editing a working copy, commit-on-Done
+                           (bands/units/contacts BUILT; PIN gate still TODO)
   HistoryView.swift      – past readings list (placeholder)
 Theme/
   Theme.swift            – all fonts + band colours
@@ -41,6 +42,7 @@ JinsulaApp.swift         – @main, injects AppModel via .environmentObject
   principles #2 & #5.
 - **No unit conversion.** The unit (`settings.unit`, default UK mmol/L) is a setup choice
   matching the meter; readings are used as-is in that unit. No ×/÷ 18.0182 anywhere.
-- Two shared hooks live on `AppModel`, not in views: `confirmReading(_:)` (fires only after a
-  band matches) and `shouldStartFreshEntry` (open-entry intent for widget/notification taps).
+- Shared hooks live on `AppModel`, not in views: `confirmReading(_:)` (fires only after a
+  band matches), `shouldStartFreshEntry` (open-entry intent for widget/notification taps), and
+  `commitSettings(_:)` (setup "Done" — persists + updates live state in one place).
 - Tests: Swift Testing framework; start with pure `BandEvaluator` tests.

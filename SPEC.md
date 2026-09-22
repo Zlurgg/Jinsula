@@ -252,6 +252,15 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   default thresholds and amount-free copy. This is the safety net: any mis-edit behind the
   PIN is always one tap from the safe, official defaults. It acts on the working copy and
   only sticks on "Done" like any other edit.
+  - **DECIDED (Session 7) — reset also restores the unit** (→ mmol/L). Because the unit
+    switch itself never converts numbers (§2), reset is the one control that puts *both*
+    unit and bands back to the guidance-grounded default in a single tap — so a family
+    member who switched to mg/dL and left stale mmol/L numbers has a clean way back.
+
+- **BUILT (Session 7).** §0–§3 shipped: the `Form`, working-copy + commit-on-Done via
+  `AppModel.commitSettings(_:)`, boundary editor + live preview + reset, units picker, and
+  the contacts editor. `SettingsStore` is now real JSON. **Deferred:** §4 Reminders toggle
+  and §5 Lock/PIN — the ⋯ menu currently opens setup directly (unguarded).
 
 ### 1. Band editing — DECIDED: edit boundaries only
 - The five bands are **fixed in count, severity, action, and headline**. Family edits only the

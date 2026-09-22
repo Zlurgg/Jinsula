@@ -14,8 +14,29 @@ protocol SettingsStoring {
     func save(_ settings: AppSettings)
 }
 
-/// Skeleton implementation — JSON read/write to be filled in a later session.
+/// JSON-backed store. A missing or unreadable file falls back to the safe
+/// defaults, so a first run (or a corrupted file) still lands on the
+/// guidance-grounded UK bands rather than an empty/unsafe configuration.
 final class SettingsStore: SettingsStoring {
-    func load() -> AppSettings { .default }
-    func save(_ settings: AppSettings) { /* TODO: write JSON */ }
+    private let fileURL: URL
+
+    init(fileName: String = "settings.json") {
+        let directory = FileManager.default.urls(for: .documentDirectory,
+                                                 in: .userDomainMask)[0]
+        self.fileURL = directory.appendingPathComponent(fileName)
+    }
+
+    func load() -> AppSettings {
+        guard let data = try? Data(contentsOf: fileURL),
+              let settings = try? JSONDecoder().decode(AppSettings.self, from: data)
+        else {
+            return .default
+        }
+        return settings
+    }
+
+    func save(_ settings: AppSettings) {
+        guard let data = try? JSONEncoder().encode(settings) else { return }
+        try? data.write(to: fileURL, options: [.atomic])
+    }
 }

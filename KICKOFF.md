@@ -5,51 +5,58 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## State
 
-- **Daily-use screen is BUILT and compiles** (iOS 15 / universal). Custom keypad
-  (unit-aware `.` key, one-d.p. cap, bounds-checked, explicit confirm) → full-screen
-  `ResultCardView` (echo, headline, amount-free detail, action button from `band.action`,
-  auto-speak + "Read it again" + Done). Verified at the 4.7" **layout floor** (iPhone SE
-  2nd gen sim = 6s screen) via live entry screenshot + all four card states rendered.
-- **The two shared hooks now exist on `AppModel`:** `confirmReading(_:)` (matches once,
-  then logs reading + cancels retest + writes widget snapshot — collaborators stubbed;
-  fires only *after* a band matches) and `shouldStartFreshEntry` + `consumeFreshEntry()`
-  (widget/notification open-entry intent; `jinsula://check` wired in `ContentView`).
-- **Safety fix landed:** `GuidanceBand.defaultUKBands` was still naming amounts
-  ("15–20g… GlucoTabs") and using the old 9.0 edge — replaced with the Session-5
-  amount-free copy + T3=10.0 (principle #5). Amber `Theme.high` darkened for WCAG AA.
-- **Not yet done:** real persistence (`ReadingsStore`/`SettingsStore` still stubs),
-  `ReminderService`, widget target, setup screen + PIN gate (⋯ menu is a placeholder
-  alert). No device sign-off yet at the true **OS floor** (iOS 15 — physical 6s only;
-  no iOS ≤15 simulator runtime installable on this Xcode).
+- **Setup screen is BUILT and compiles** (iOS 15 / universal). `SetupView` is a
+  `NavigationView` + `Form` editing a **working copy** of `AppSettings`, committed only
+  on "Done" via `AppModel.commitSettings(_:)` (Cancel discards). Sections: Who / Units
+  (segmented, no-conversion note) / Reading thresholds (four boundary fields written to
+  both adjacent bands so ranges stay contiguous; positive-and-increasing validation gates
+  Done; **Reset to defaults** restores **unit *and* bands**) / per-band `detail` wording
+  (headlines fixed) / live Preview / Emergency contacts (add/edit/delete, first = primary,
+  empty-list nudge). The ⋯ menu on the daily screen opens it as a sheet.
+- **`SettingsStore` is now real** — atomic Codable JSON in Documents, missing/corrupt file
+  falls back to the safe UK defaults. `ReadingsStore` is still a stub.
+- **Verified partially:** `SetupView` renders correctly (preview) and the app launches on the
+  booted SE sim. The interactive flow (present / commit / persist-across-relaunch / cancel /
+  validation / reset / contact edit) was **NOT driven** — there is no UI-test target and no
+  `idb`, so nothing scripts taps. Real bundle id observed: `uk.co.zlurgg.Jinsula`.
+- **Not yet done:** PIN gate + Keychain, reminders toggle + `ReminderService`, the widget
+  target + App Group, `ReadingsStore` persistence, and the **app icon (still the Xcode default)**.
+  The ⋯ setup door is currently **unguarded**.
 
 ## Next session — pick one
 
-1. **Build the setup screen + PIN gate (default)** — unblocks the ⋯ menu placeholder
-   left on the daily screen; boundaries-only band editor, units, contacts, reset-to-defaults,
-   Keychain PIN. Needs real `SettingsStore` persistence too.
-2. **Build the retest reminder + widget** — the `confirmReading(_:)` hook it depends on
-   now exists; fill in `ReminderService` + the widget target behind the existing stubs.
-3. **Wire real persistence** (`ReadingsStore` / `SettingsStore` JSON) — smaller, unblocks
-   readings actually surviving and the widget snapshot having data.
+1. **PIN gate + widget — MVP for an iPad demo (default).** Smallest thing that gates the
+   setup door and shows a Home Screen widget, so it can be demoed on a physical iPad. Keep
+   both bare-bones: a 4-digit Keychain PIN in front of `SetupView`, and a widget that reads
+   the last snapshot. `ReminderService` can stay stubbed for the demo.
+2. **Wire real persistence** (`ReadingsStore` JSON) — small; makes logged readings survive
+   and gives the widget snapshot real data.
+3. **App icon pass** — replace the default Xcode icon (`Assets.xcassets/AppIcon`); its own
+   short session (asset design + all required sizes).
 
 ## Load in
 
-- **Build the setup screen + PIN gate:** SPEC.md → "Setup screen — design plan" (whole
-  section) + "Default UK bands". Files: `Views/SetupView.swift`, `Models/AppSettings.swift`,
-  `Models/GuidanceBand.swift`, `Services/SettingsStore.swift`; the ⋯ menu placeholder +
-  `showSettingsStub` alert in `Views/DailyUseView.swift` (replace with the PIN pad).
-- **Build the retest reminder + widget:** SPEC.md → "Retest reminder + widget — design
-  plan" (whole section). Hook into the existing `AppModel.scheduleRetestReminder()` /
-  `cancelRetestReminder()` / `writeWidgetSnapshot(...)` stubs (`ViewModels/AppModel.swift`)
-  and `ContentView.onOpenURL`. New files: `Services/ReminderService.swift` + a Widget target.
-- **Wire real persistence:** `Services/ReadingsStore.swift`, `Services/SettingsStore.swift`
-  (both currently return stubs); `Models/GlucoseReading.swift`, `AppSettings.swift` for the
-  Codable shapes. `AppModel.confirmReading(_:)` already calls `readingsStore.append(_:)`.
+- **PIN gate + widget:**
+  - PIN: SPEC.md → "Setup screen — design plan" §5 (Lock — 4-digit PIN) + §0. Files:
+    `Views/DailyUseView.swift` (the `showingSetup` sheet + ⋯ menu — put a PIN pad in front),
+    `Views/SetupView.swift` (the gated screen), `Models/AppSettings.swift` (`isLocked`;
+    add `hasPIN` derived from Keychain). New: `Services/PINStore.swift` (Keychain wrapper).
+    First-run: no PIN → setup opens directly, prompt to set one at the end (optional).
+  - Widget: SPEC.md → "Retest reminder + widget — design plan" (whole section). Hook into
+    `AppModel.writeWidgetSnapshot(_:severity:)` (stub) and `ContentView.onOpenURL`
+    (`jinsula://check`). New: a Widget Extension target + App Group entitlement on bundle id
+    **`uk.co.zlurgg.Jinsula`**.
+- **Wire real persistence:** `Services/ReadingsStore.swift` (stub); `Models/GlucoseReading.swift`
+  for the Codable shape. Mirror the now-real `Services/SettingsStore.swift`.
+- **App icon pass:** `Jinsula/Assets.xcassets/AppIcon.appiconset`.
 
 ## Open questions
 
-_None blocking._ Remaining unknowns are build-time mechanics only: App Group entitlement
-needs a real bundle ID / signing (widget session); TTS voice/rate final tuning on-device;
-**OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime is
-installable on this Xcode (the 6s can't pair with iOS 18.5/26.5). Layout floor is covered
-by the "Jinsula SE (layout floor)" simulator (SE 2nd gen = same 375×667pt screen).
+- **App icon** is still the default — needs its own pass (candidate topic 3).
+- **Interactive setup flow is unverified** — no UI-test target / no `idb` in this project.
+  To get replayable end-to-end verification, add a UI-test target using XCUIAutomation.
+- **Call button dialing unverified** — `tel:` URLs no-op in the Simulator; needs a physical
+  device (part of the physical-device sign-off).
+- **OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime installable
+  on this Xcode. Layout floor covered by the "Jinsula SE (layout floor)" simulator.
+- **Widget App Group** needs the entitlement wired to `uk.co.zlurgg.Jinsula` (build-mechanics).

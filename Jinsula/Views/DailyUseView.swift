@@ -22,8 +22,9 @@ struct DailyUseView: View {
     @State private var showingCard = false
     /// Shown when confirm is tapped on an implausible / unmatched value.
     @State private var showTryAgain = false
-    /// Placeholder for the family-only setup door (real PIN gate: Session 4).
-    @State private var showSettingsStub = false
+    /// Presents the family-only setup screen. The PIN gate that should sit in
+    /// front of this is a follow-up; for now the ⋯ menu opens setup directly.
+    @State private var showingSetup = false
 
     private var unit: GlucoseUnit { model.settings.unit }
     /// mmol/L readings carry one decimal place; mg/dL are integers only.
@@ -71,10 +72,9 @@ struct DailyUseView: View {
             startFreshEntry()
             model.consumeFreshEntry()
         }
-        .alert("Settings", isPresented: $showSettingsStub) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Settings are managed by your family.")
+        .sheet(isPresented: $showingSetup) {
+            SetupView(settings: model.settings)
+                .environmentObject(model)
         }
     }
 
@@ -83,11 +83,11 @@ struct DailyUseView: View {
     private var header: some View {
         HStack {
             Spacer()
-            // Discreet ⋯ menu — the one sanctioned door to setup. The PIN gate
-            // and setup screen itself are built in Session 4; reserved here.
+            // Discreet ⋯ menu — the one sanctioned door to setup. Opens SetupView
+            // directly for now; the PIN gate in front of it is a follow-up.
             Menu {
                 Button {
-                    showSettingsStub = true   // TODO (Session 4): PIN pad → SetupView
+                    showingSetup = true   // TODO: PIN pad in front of this (follow-up)
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }

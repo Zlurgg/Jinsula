@@ -73,6 +73,16 @@ final class AppModel: ObservableObject {
         shouldStartFreshEntry = false
     }
 
+    /// Commits edited settings from the setup screen (SPEC.md "Setup screen" §0).
+    /// The setup screen edits a **working copy** and calls this only on "Done", so
+    /// a half-edited band array never reaches the daily-use card. Persists through
+    /// the store and updates live state in one step, so the next reading is matched
+    /// against the new bands immediately.
+    func commitSettings(_ newSettings: AppSettings) {
+        settings = newSettings
+        settingsStore.save(newSettings)
+    }
+
     // MARK: - Stubbed collaborators (wired in later build sessions)
 
     /// A new confirmed reading supersedes any pending retest nudge.
