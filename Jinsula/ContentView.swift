@@ -2,23 +2,19 @@
 //  ContentView.swift
 //  Jinsula
 //
-//  Created by Joseph Brightman on 22/09/2026.
+//  Root view. For now it shows the daily-use screen directly; routing between
+//  daily use / setup / history is added once those screens are built.
 //
 
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        DailyUseView()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AppModel())
 }
