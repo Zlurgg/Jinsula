@@ -26,21 +26,45 @@ call right.
 3. **Escalate, don't reassure, on danger.** Very low / very high readings show a
    "get help now" card with a one-tap call to a family contact — not a snack tip.
 4. **Settings are lockable** so grandma can't change bands or contacts by accident.
+5. **No amounts, only direction (Session 5).** The app never states quantities or
+   doses. It names the state (**low / okay / high**) and the directional action —
+   *have sugar* vs *do not take insulin* vs *follow your nurse's plan* — plus, on a
+   low, *test again in 15 minutes* (the guidance-backed retest rule). This sharpens
+   principle #2: not just "don't compute a dose" but "don't name amounts at all."
+   Family may add their own care-plan wording in a band's `detail` at setup (that's
+   their plan, not the app advising), but the **shipped defaults stay amount-free**.
 
 ## Default UK bands (starting points only — mmol/L)
 
-Confirmed against Diabetes UK ("4 is the floor") and the NHS/JBDS hypo algorithm.
+**DECIDED (Session 5) — defaults follow official UK guidance exactly.** Thresholds are
+grounded in the Diabetes-UK-endorsed target range and the hypo floor; copy is
+amount-free (safety principle #5). Four boundaries T1<T2<T3<T4 over a fixed 5-band shape.
 
-| Reading (mmol/L) | Band | Card |
-|---|---|---|
-| below 3.0, or confused/drowsy | Emergency (red) | "Get help now" + one-tap call |
-| 3.0 – 3.9 | Low (orange) | "Eat sugar now — do NOT take insulin" + retest timer |
-| 4.0 – ~8.5 | In range (green) | "Your reading is fine" |
-| ~9 – 15 | High (amber) | "Follow the plan from your nurse" (no dose) |
-| above 15 | Very high (red) | "Call your family or nurse" + one-tap call |
+Defaults: **T1 = 3.0, T2 = 4.0, T3 = 10.0, T4 = 15.0** (mmol/L).
 
-Sources: diabetes.org.uk/about-diabetes/looking-after-diabetes/complications/hypos ;
-JBDS hypo algorithm (2022).
+| Reading (mmol/L) | Band | Headline (fixed) | Default detail (no amounts) | Action |
+|---|---|---|---|---|
+| below 3.0 | Emergency (red) | "Get help now" | "Your sugar is very low. Have sugar now and call for help." | Call [name] |
+| 3.0 – 4.0 | Low (orange) | "Eat sugar now — do NOT take insulin" | "Your sugar is low. Have something sugary. Test again in 15 minutes." | Remind me in 15 min |
+| 4.0 – 10.0 | In range (green) | "You're okay" | "Your sugar is in a good range." | — |
+| 10.0 – 15.0 | High (amber) | "Your sugar is high" | "Follow the plan your nurse gave you." | — |
+| above 15.0 | Very high (red) | "Reading very high" | "Call your family or nurse." | Call [name] |
+
+**Grounding:**
+- **Below 4.0 = hypo** ("4 is the floor", Diabetes UK / NHS); **below 3.0** = clinically
+  significant / severe hypo (ADA–EASD + International Hypoglycaemia Study Group) → emergency.
+- **In range = 4.0–10.0.** 10.0 is the upper bound of the internationally standardized,
+  Diabetes-UK-endorsed target range **3.9–10.0 mmol/L (= 70–180 mg/dL)**. This moves the
+  old fuzzy ~8.5/9.0 edge to a clean 10.0 and makes the mg/dL conversion land on the TIR
+  standard (70–180).
+- **T4 = 15.0** is the widely used "very high / check ketones, seek help" line; guidance
+  gives no single crisp number here, so family can tune it behind the PIN.
+- The "test again in 15 minutes" line on a low is the guidance-backed retest rule — we
+  give the *direction and timing*, never an amount (no "15 g").
+
+Sources: diabetes.org.uk/about-diabetes/looking-after-diabetes/time-in-range (target
+range 3.9–10.0 mmol/L) ; NHS hypo/target guidance ("below 4") ; ADA–EASD <3.0 mmol/L
+statement ; JBDS hypo algorithm (2022).
 
 ## Two modes
 
@@ -57,8 +81,9 @@ A Home Screen **widget** ("Check my sugar") should launch straight into the numb
 ## Daily-use screen — design plan (Session 2)
 
 The everyday flow is three states: **Entry → Result card → back to Entry**. One value
-in, one huge colour card out, spoken aloud. No menus, no history, no settings reachable
-from here (setup lives behind the lock). Reads from `AppModel` only.
+in, one huge colour card out, spoken aloud. No history and no *open* settings from here —
+the **one exception (Session 5)** is a discreet **⋯ menu** that is PIN-gated (see "Setup
+screen §5"); everything behind it is locked. Reads from `AppModel` only.
 
 ### 1. Number entry
 - **DECIDED: a big custom on-screen keypad**, not a stepper (too many taps to reach 5.6)
@@ -84,7 +109,10 @@ from here (setup lives behind the lock). Reads from `AppModel` only.
   1. Small echo line: **"Your reading: 5.6"** so she can see what the card responded to.
   2. **Headline** — biggest (`Theme.headline`), the loud line ("Eat sugar now — do NOT
      take insulin").
-  3. **Detail** (`Theme.instruction`) — the supporting amounts/steps.
+  3. **Detail** (`Theme.instruction`) — the supporting **directional** reminder only
+     (have sugar / follow your plan / call), **never amounts or doses** (safety
+     principle #5). Shipped defaults are amount-free; family may add their own care-plan
+     wording here at setup.
   4. **One action button**, driven entirely by `band.action` (never branch band logic in
      the view):
      - `.none` → no action button; only the **Done** button (see flow-back).
@@ -146,14 +174,21 @@ adds band logic; both hang off a single new moment — **"a reading was just con
 and a single shared **"open blank entry"** intent.
 
 ### 0. Two shared hooks these features need
-- **Reading-confirmed hook.** On confirm (see §"Daily-use screen — Flow back") the app
-  will, in one place: log the `GlucoseReading`, cancel any pending retest reminder, and
-  write the widget snapshot. Wiring is a build session; this plan assumes that single call
-  site exists.
-- **Open-entry intent.** Both a notification tap and a widget tap must land on a **blank
-  entry screen** (dismiss any result card, clear the field). One published flag on
-  `AppModel` (e.g. `shouldStartFreshEntry`), fed by `onOpenURL` (widget) and the
-  notification delegate; `ContentView`/`DailyUseView` observe it and reset.
+**DECIDED (Session 5) — both hooks live on `AppModel`, not in the views.** This is the one
+condition on which all three plans integrate cleanly; keep views dumb.
+- **Reading-confirmed hook = `AppModel.confirmReading(_:)`.** On confirm (see §"Daily-use
+  screen — Flow back") this single method matches the band once, then in one place: logs the
+  `GlucoseReading`, cancels any pending retest reminder, and writes the widget snapshot.
+  **It fires only *after a band matches*** — rejected/out-of-bounds input and the defensive
+  `nil` case stay on the entry screen, so a typo is never logged and no snapshot is written.
+  Later build sessions fill in the `ReminderService` / widget-writer collaborators behind this
+  stable call site (define it now, stub the collaborators, so the confirm path isn't re-touched).
+- **Open-entry intent = `AppModel.shouldStartFreshEntry`.** Both a notification tap and a
+  widget tap must land on a **blank entry screen**. When the flag fires, `DailyUseView` must
+  do **both**: **dismiss the full-screen result card** *and* **clear the entry field** (the
+  card is a `fullScreenCover`, so a single "reset" that misses either leaves a stale card).
+  Fed by `onOpenURL` (widget `jinsula://check`) and the notification delegate; the view
+  consumes and clears the flag (idempotent across the two sources).
 
 ### 1. Retest reminder (local notification)
 - **Trigger:** only the Low (orange) band's `.retestTimer` action ("Remind me in 15
@@ -210,6 +245,12 @@ A single `NavigationView` + `Form` (iOS 15-safe, renders well on iPad). Sections
 **Who this is for → Units → Reading bands → Emergency contacts → Reminders → Lock**. "Done"
 validates, commits through `AppModel` → `SettingsStore`, relocks, returns to daily use.
 
+- **DECIDED (Session 5) — Reset to defaults.** A clearly-labelled "Reset to defaults"
+  control (in the Reading bands section, with a confirm) restores the guidance-grounded
+  default thresholds and amount-free copy. This is the safety net: any mis-edit behind the
+  PIN is always one tap from the safe, official defaults. It acts on the working copy and
+  only sticks on "Done" like any other edit.
+
 ### 1. Band editing — DECIDED: edit boundaries only
 - The five bands are **fixed in count, severity, action, and headline**. Family edits only the
   **four interior thresholds** T1<T2<T3<T4 and each band's **`detail`** text.
@@ -221,15 +262,16 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   |---|---|---|---|---|
   | 1 | below T1 | emergency | callContact | "Get help now" |
   | 2 | T1–T2 | low | retestTimer | "Eat sugar now — do NOT take insulin" |
-  | 3 | T2–T3 | inRange | none | "Your reading is fine" |
-  | 4 | T3–T4 | high | none | "Follow the plan from your nurse" |
+  | 3 | T2–T3 | inRange | none | "You're okay" |
+  | 4 | T3–T4 | high | none | "Your sugar is high" |
   | 5 | above T4 | emergency | callContact | "Reading very high" |
 
-  Defaults T1=3.0, T2=4.0, T3=9.0, T4=15.0 (mmol/L).
-- **Why headlines/actions are fixed:** the headlines carry the non-negotiable safety lines
-  (esp. "do NOT take insulin", safety principle #2). Family tunes only the supporting `detail`
-  (specific foods/amounts, their own care-plan wording) — they cannot delete a safety line.
-  *(Flag for Session 5 veto if family needs headline control.)*
+  Defaults T1=3.0, T2=4.0, T3=10.0, T4=15.0 (mmol/L) — see "Default UK bands" for grounding.
+- **Why headlines/actions are fixed — CONFIRMED (Session 5):** the headlines carry the
+  non-negotiable safety lines (esp. "do NOT take insulin", safety principles #2 & #5). Family
+  tunes only the supporting `detail` (their own care-plan wording) — they cannot delete a
+  safety line, and defaults name no amounts. Headlines stay fixed **even behind the PIN**;
+  the reset-to-defaults option (§0) is the safety net for a mis-edit.
 - **Validation:** thresholds must be strictly increasing and positive; "Done" is disabled with
   an inline message otherwise. A live preview shows the five resulting bands (colour swatch +
   range + headline) so family sees the effect before saving.
@@ -238,10 +280,16 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   defensive (retires that open question).
 
 ### 2. Units
-- Picker mmol/L (default) | mg/dL. Bands are plain numbers interpreted in `settings.unit`.
-- **OPEN (safety-sensitive):** switching unit must **convert the four thresholds** (×/÷ 18.0182,
-  rounded to a sensible step) and show the converted numbers for family to confirm — never leave
-  e.g. `4.0` reinterpreted as 4.0 mg/dL. Recommend convert-then-confirm; finalise in build.
+- Picker mmol/L (default UK) | mg/dL. Bands are plain numbers interpreted in `settings.unit`.
+- **DECIDED (Session 5) — no conversion, ever.** The unit is a setup choice that matches the
+  user's meter; it is not a live "convert my plan" control. The reading comes off the device
+  already in that unit, is typed/spoken in, and is used as-is if it falls in the valid range for
+  that unit. There is no ×/÷ 18.0182 math anywhere in the app.
+  - This removes the reinterpretation danger by removing the feature: we never take an existing
+    threshold and silently read it under a different unit. mmol/L is the shipped default and the
+    expected case; mg/dL remains in the model for other regions, entered directly in mg/dL.
+  - The unit still drives daily use: the `.` key (shown for mmol/L, hidden for mg/dL, per
+    "Daily-use screen §1") and the valid input range (mmol/L 1.0–33.3, mg/dL 20–600).
 
 ### 3. Emergency contacts
 - List of `EmergencyContact` (name + phone): add / edit / delete. **First = primary**, the one the
@@ -260,12 +308,16 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   enroll *her*, not the family member.
 - **PIN stored in Keychain**, not the plaintext settings JSON. `AppSettings.isLocked` reflects
   whether setup is currently gated; `hasPIN` derives from Keychain presence.
-- **Entry from daily use:** a small, discreet gear in a corner; if `hasPIN`, tapping it shows a
-  PIN pad → correct PIN opens setup. The four digits are the real gate against accidental entry.
+- **Entry from daily use — DECIDED (Session 5): a discreet ⋯ (three-dot) menu** in a corner of
+  the daily screen (resolves the "no settings reachable" tension in the daily-use plan — the ⋯
+  menu is the one sanctioned door). Out of the box the app just uses the standard bands; the PIN
+  is what lets the family alter them. If `hasPIN`, choosing "Settings" shows a PIN pad → correct
+  PIN opens setup. The four digits are the real gate against accidental entry.
 - **First run:** no PIN, setup opens directly; at the end, prompt "Set a PIN so this can't be
   changed by accident." PIN strongly encouraged but optional.
-- **OPEN (minor):** PIN recovery. Leaning: no recovery flow — reinstall resets (settings are local
-  JSON and would be wiped anyway). Confirm in build.
+- **DECIDED (Session 5) — no PIN recovery.** There is no reset/recovery flow: if the PIN is
+  forgotten, reinstalling the app resets everything (settings are local JSON and would be wiped
+  anyway). Acceptable because setup is rare and family-managed.
 
 ## Devices & platform decisions
 
@@ -305,8 +357,10 @@ No code is written during the planning sessions.
 2. **Session 2 — Plan the daily-use screen** (number entry → result card → speech).
 3. **Session 3 — Plan the retest reminder + Home Screen widget.**
 4. **Session 4 — Plan the setup screen** (bands, contacts, units, the lock).
-5. **Session 5 — Refine all three plans together**; confirm they integrate and still
-   serve the goal (safe, dead-simple daily use).
+5. ✅ **Session 5 — Refine all three plans together.** Confirmed they integrate on one
+   condition (both shared hooks live on `AppModel`). Settled: no-amounts principle (#5),
+   guidance-grounded defaults (T3→10.0), ⋯-menu PIN entry, reset-to-defaults, headlines
+   stay fixed even behind the PIN.
 6. **Build sessions — one feature per session**, each followed by review + test on a
    physical iPhone 6s and a physical iPad.
 
@@ -337,6 +391,18 @@ No code is written during the planning sessions.
       screen — design plan" §5. Biometrics rejected (would enroll grandma, not family).
 - [x] **Band editing → boundaries only** (four editable thresholds over a fixed 5-band shape;
       contiguity by construction). Detailed in §1. Headlines/actions fixed to protect safety copy.
-- [ ] **Unit switch converts thresholds** (mmol/L ↔ mg/dL, convert-then-confirm) — recommended
-      in §2, finalise in build.
-- [ ] **PIN recovery** — leaning "none, reinstall resets"; confirm in build (§5).
+- [x] **Default thresholds follow UK guidance exactly (Session 5):** T1=3.0, T2=4.0, T3=10.0,
+      T4=15.0. In-range upper is 10.0 (Diabetes-UK-endorsed 3.9–10.0 = 70–180 mg/dL), retiring
+      the old ~8.5/9.0 edge. See "Default UK bands".
+- [x] **No amounts, only direction (Session 5):** safety principle #5. Shipped `detail` copy is
+      amount-free; family may add care-plan wording but headlines stay fixed even behind the PIN.
+- [x] **Setup entry + safety net (Session 5):** discreet PIN-gated ⋯ menu on the daily screen;
+      "reset to defaults" restores the guidance defaults after any mis-edit.
+- [x] **Unit switch → no conversion (Session 5).** The unit is a setup choice matching the meter
+      (default UK mmol/L); there is no ×/÷ 18.0182 math. The reading comes off the device in that
+      unit and is used as-is if in the valid range. mg/dL stays in the model for other regions,
+      entered directly. See setup §2. (Removes the reinterpretation danger by removing the feature.)
+- [x] **PIN recovery → none (Session 5).** No recovery flow; reinstall resets (local JSON). See §5.
+- **v1 scope note (Session 5):** reading entry is **typing only** (the custom keypad). Voice
+  *input* is explicitly deferred — it's safety-sensitive (mishearing "5.6" vs "15.6") and would
+  need its own plan with a mandatory read-back-and-confirm step.

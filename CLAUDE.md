@@ -36,5 +36,11 @@ JinsulaApp.swift         – @main, injects AppModel via .environmentObject
   use **Codable JSON**, NOT SwiftData/Core Data.
 - Universal app: iPhone + iPad (iPad 8th gen is a first-class large-display target).
 - Bands are the single source of truth — never branch band logic inside views.
-- **Never compute an insulin dose.** See SPEC.md safety principles.
+- **Never compute an insulin dose, and never name amounts/doses.** The app gives direction
+  (low/okay/high, sugar vs insulin, retest in 15 min), never quantities. See SPEC.md safety
+  principles #2 & #5.
+- **No unit conversion.** The unit (`settings.unit`, default UK mmol/L) is a setup choice
+  matching the meter; readings are used as-is in that unit. No ×/÷ 18.0182 anywhere.
+- Two shared hooks live on `AppModel`, not in views: `confirmReading(_:)` (fires only after a
+  band matches) and `shouldStartFreshEntry` (open-entry intent for widget/notification taps).
 - Tests: Swift Testing framework; start with pure `BandEvaluator` tests.

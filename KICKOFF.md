@@ -7,40 +7,41 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 - Compiling skeleton at **iOS 15 / universal (iPhone + iPad)**; bands modelled as data,
   `BandEvaluator` + `Theme` done. Views are still placeholders.
-- **All three feature plans are now written in SPEC.md:** daily-use screen (Session 2),
-  retest reminder + widget (Session 3), and setup screen (Session 4).
-- **Session 4 done — setup screen planned** ("Setup screen — design plan"). Decided:
-  lock = **4-digit PIN** (Keychain, knowledge-gated); band editing = **boundaries only**
-  (four editable thresholds over a fixed 5-band shape, contiguity by construction, no model
-  change); headlines/actions fixed to protect safety copy; working-copy-then-commit flow;
-  contacts (first = primary) + notifications toggle. This retires the `band(for:) == nil`
-  open question.
+- **All planning is done.** Three feature plans written (daily-use, retest reminder + widget,
+  setup) and **Session 5 has refined + integrated them.** SPEC.md now has **zero open questions.**
+- **Session 5 decisions (all in SPEC.md):** safety principle **#5 "no amounts, only direction"**;
+  defaults follow UK guidance exactly (**T1=3.0 T2=4.0 T3=10.0 T4=15.0** mmol/L; in-range upper
+  moved 9.0→10.0 = Diabetes-UK 3.9–10.0 / 70–180 mg/dL); **no unit conversion ever** (unit is a
+  setup choice matching the meter, default UK mmol/L); both shared hooks live on **`AppModel`**
+  (`confirmReading(_:)` fires only after a band matches; `shouldStartFreshEntry` must dismiss the
+  card *and* clear the field); setup entry = discreet **PIN-gated ⋯ menu**; **reset-to-defaults**
+  safety net; headlines stay fixed even behind the PIN; **no PIN recovery**; v1 entry is
+  **typing only** (voice deferred).
 
 ## Next session — pick one
 
-1. **Session 5 (default) — Refine all three plans together**; confirm they integrate and
-   still serve the goal (safe, dead-simple daily use).
-2. Start building — the daily-use screen plan is complete enough to implement.
+1. **Build the daily-use screen (default)** — the plan is complete and unblocked; this is the
+   first build session and creates the two shared `AppModel` hooks the later features depend on.
+2. Build the setup screen, or the retest reminder + widget — either can follow; daily-use first
+   is recommended because it creates the shared hooks.
 
 ## Load in
 
-- **Session 5 (refine):** SPEC.md → "Daily-use screen — design plan",
-  "Retest reminder + widget — design plan", "Setup screen — design plan", "Two modes".
-  Cross-check the shared hooks: reading-confirmed call site + `AppModel.shouldStartFreshEntry`
-  open-entry intent (used by notification tap, widget tap) and the setup working-copy commit.
-- **Build the daily-use screen:** SPEC.md → "Daily-use screen — design plan" (whole section)
-  + "Retest reminder + widget — design plan" §0 (the reading-confirmed call site + open-entry
-  intent get created here); `Jinsula/Jinsula/Views/DailyUseView.swift`, `ResultCardView.swift`;
-  `Theme.swift` (amber darkening); `AppModel.swift`, `BandEvaluator.swift`.
+- **Build the daily-use screen:** SPEC.md → "Daily-use screen — design plan" (whole section),
+  "Default UK bands" (the thresholds + amount-free copy), safety principle #5, and
+  "Retest reminder + widget — design plan" §0 (the `AppModel.confirmReading(_:)` call site +
+  `shouldStartFreshEntry` open-entry intent get created here). Files:
+  `Jinsula/Jinsula/Views/DailyUseView.swift`, `ResultCardView.swift`; `Theme.swift` (amber
+  darkening); `AppModel.swift`, `BandEvaluator.swift`; `Models/GuidanceBand.swift`,
+  `GlucoseReading.swift`, `GlucoseUnit.swift`.
+- **Build the setup screen:** SPEC.md → "Setup screen — design plan" (whole section) + "Default
+  UK bands". Files: `Views/SetupView.swift`, `Models/AppSettings.swift`, `Models/GuidanceBand.swift`,
+  `Services/SettingsStore.swift`.
+- **Build the retest reminder + widget:** SPEC.md → "Retest reminder + widget — design plan"
+  (whole section). Depends on the daily-use `confirmReading(_:)` hook existing first.
 
 ## Open questions
 
-- **Unit switch converts thresholds (build):** switching mmol/L ↔ mg/dL must convert the four
-  band thresholds (×/÷ 18.0182), convert-then-confirm — never reinterpret the same number.
-  Recommended in "Setup screen — design plan" §2; finalise in build.
-- **PIN recovery (build):** leaning "none — reinstall resets" (settings are local JSON);
-  confirm in build (§5).
-- **Headline editability (Session 5):** headlines currently fixed to protect the safety copy
-  (e.g. "do NOT take insulin"). Confirm family never needs to edit them, or add a guarded path.
-- **App Group entitlement (build):** the group identifier + entitlement need a real bundle ID /
-  signing; deferred to the widget build session.
+_None._ All planning questions are resolved in SPEC.md. Remaining unknowns are build-time
+mechanics only (e.g. App Group entitlement needs a real bundle ID / signing — deferred to the
+widget build session; TTS voice/rate tuning; exact keypad sizing on-device).
