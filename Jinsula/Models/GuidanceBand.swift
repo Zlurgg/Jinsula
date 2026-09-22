@@ -28,7 +28,9 @@ struct GuidanceBand: Codable, Identifiable, Equatable {
     var severity: Severity
     /// Short, loud line shown biggest on the card, e.g. "Eat sugar now".
     var headline: String
-    /// Supporting detail, e.g. suggested foods/amounts.
+    /// Supporting **directional** detail (have sugar / follow your plan / call).
+    /// Never names amounts or doses — safety principle #5. Family may add their
+    /// own care-plan wording here at setup; shipped defaults stay amount-free.
     var detail: String
     /// Which action button (if any) the card offers.
     var action: Action
@@ -56,25 +58,27 @@ struct GuidanceBand: Codable, Identifiable, Equatable {
 }
 
 extension GuidanceBand {
-    /// Placeholder UK defaults (mmol/L). Starting points only — adjusted per
-    /// person during setup. See SPEC.md for the rationale and sources.
+    /// UK defaults (mmol/L), grounded in official guidance and **amount-free**
+    /// (safety principle #5 — the app names direction, never quantities/doses).
+    /// Starting points only — thresholds are adjusted per person during setup.
+    /// Boundaries T1=3.0, T2=4.0, T3=10.0, T4=15.0. See SPEC.md "Default UK bands".
     static var defaultUKBands: [GuidanceBand] {
         [
             GuidanceBand(lower: nil, upper: 3.0, severity: .emergency,
                          headline: "Get help now",
-                         detail: "Your reading is very low. Do NOT take insulin. Call for help.",
+                         detail: "Your sugar is very low. Have sugar now and call for help.",
                          action: .callContact),
             GuidanceBand(lower: 3.0, upper: 4.0, severity: .low,
                          headline: "Eat sugar now — do NOT take insulin",
-                         detail: "Have 15–20g fast sugar (e.g. 4–5 GlucoTabs, 150–200ml fruit juice, or 3–4 jelly babies). Wait 15 minutes, then test again.",
+                         detail: "Your sugar is low. Have something sugary. Test again in 15 minutes.",
                          action: .retestTimer),
-            GuidanceBand(lower: 4.0, upper: 9.0, severity: .inRange,
-                         headline: "Your reading is fine",
-                         detail: "No action needed.",
+            GuidanceBand(lower: 4.0, upper: 10.0, severity: .inRange,
+                         headline: "You're okay",
+                         detail: "Your sugar is in a good range.",
                          action: .none),
-            GuidanceBand(lower: 9.0, upper: 15.0, severity: .high,
-                         headline: "Your reading is high",
-                         detail: "Follow the plan from your nurse or doctor.",
+            GuidanceBand(lower: 10.0, upper: 15.0, severity: .high,
+                         headline: "Your sugar is high",
+                         detail: "Follow the plan your nurse gave you.",
                          action: .none),
             GuidanceBand(lower: 15.0, upper: nil, severity: .emergency,
                          headline: "Reading very high",

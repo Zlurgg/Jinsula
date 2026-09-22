@@ -5,43 +5,51 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## State
 
-- Compiling skeleton at **iOS 15 / universal (iPhone + iPad)**; bands modelled as data,
-  `BandEvaluator` + `Theme` done. Views are still placeholders.
-- **All planning is done.** Three feature plans written (daily-use, retest reminder + widget,
-  setup) and **Session 5 has refined + integrated them.** SPEC.md now has **zero open questions.**
-- **Session 5 decisions (all in SPEC.md):** safety principle **#5 "no amounts, only direction"**;
-  defaults follow UK guidance exactly (**T1=3.0 T2=4.0 T3=10.0 T4=15.0** mmol/L; in-range upper
-  moved 9.0→10.0 = Diabetes-UK 3.9–10.0 / 70–180 mg/dL); **no unit conversion ever** (unit is a
-  setup choice matching the meter, default UK mmol/L); both shared hooks live on **`AppModel`**
-  (`confirmReading(_:)` fires only after a band matches; `shouldStartFreshEntry` must dismiss the
-  card *and* clear the field); setup entry = discreet **PIN-gated ⋯ menu**; **reset-to-defaults**
-  safety net; headlines stay fixed even behind the PIN; **no PIN recovery**; v1 entry is
-  **typing only** (voice deferred).
+- **Daily-use screen is BUILT and compiles** (iOS 15 / universal). Custom keypad
+  (unit-aware `.` key, one-d.p. cap, bounds-checked, explicit confirm) → full-screen
+  `ResultCardView` (echo, headline, amount-free detail, action button from `band.action`,
+  auto-speak + "Read it again" + Done). Verified at the 4.7" **layout floor** (iPhone SE
+  2nd gen sim = 6s screen) via live entry screenshot + all four card states rendered.
+- **The two shared hooks now exist on `AppModel`:** `confirmReading(_:)` (matches once,
+  then logs reading + cancels retest + writes widget snapshot — collaborators stubbed;
+  fires only *after* a band matches) and `shouldStartFreshEntry` + `consumeFreshEntry()`
+  (widget/notification open-entry intent; `jinsula://check` wired in `ContentView`).
+- **Safety fix landed:** `GuidanceBand.defaultUKBands` was still naming amounts
+  ("15–20g… GlucoTabs") and using the old 9.0 edge — replaced with the Session-5
+  amount-free copy + T3=10.0 (principle #5). Amber `Theme.high` darkened for WCAG AA.
+- **Not yet done:** real persistence (`ReadingsStore`/`SettingsStore` still stubs),
+  `ReminderService`, widget target, setup screen + PIN gate (⋯ menu is a placeholder
+  alert). No device sign-off yet at the true **OS floor** (iOS 15 — physical 6s only;
+  no iOS ≤15 simulator runtime installable on this Xcode).
 
 ## Next session — pick one
 
-1. **Build the daily-use screen (default)** — the plan is complete and unblocked; this is the
-   first build session and creates the two shared `AppModel` hooks the later features depend on.
-2. Build the setup screen, or the retest reminder + widget — either can follow; daily-use first
-   is recommended because it creates the shared hooks.
+1. **Build the setup screen + PIN gate (default)** — unblocks the ⋯ menu placeholder
+   left on the daily screen; boundaries-only band editor, units, contacts, reset-to-defaults,
+   Keychain PIN. Needs real `SettingsStore` persistence too.
+2. **Build the retest reminder + widget** — the `confirmReading(_:)` hook it depends on
+   now exists; fill in `ReminderService` + the widget target behind the existing stubs.
+3. **Wire real persistence** (`ReadingsStore` / `SettingsStore` JSON) — smaller, unblocks
+   readings actually surviving and the widget snapshot having data.
 
 ## Load in
 
-- **Build the daily-use screen:** SPEC.md → "Daily-use screen — design plan" (whole section),
-  "Default UK bands" (the thresholds + amount-free copy), safety principle #5, and
-  "Retest reminder + widget — design plan" §0 (the `AppModel.confirmReading(_:)` call site +
-  `shouldStartFreshEntry` open-entry intent get created here). Files:
-  `Jinsula/Jinsula/Views/DailyUseView.swift`, `ResultCardView.swift`; `Theme.swift` (amber
-  darkening); `AppModel.swift`, `BandEvaluator.swift`; `Models/GuidanceBand.swift`,
-  `GlucoseReading.swift`, `GlucoseUnit.swift`.
-- **Build the setup screen:** SPEC.md → "Setup screen — design plan" (whole section) + "Default
-  UK bands". Files: `Views/SetupView.swift`, `Models/AppSettings.swift`, `Models/GuidanceBand.swift`,
-  `Services/SettingsStore.swift`.
-- **Build the retest reminder + widget:** SPEC.md → "Retest reminder + widget — design plan"
-  (whole section). Depends on the daily-use `confirmReading(_:)` hook existing first.
+- **Build the setup screen + PIN gate:** SPEC.md → "Setup screen — design plan" (whole
+  section) + "Default UK bands". Files: `Views/SetupView.swift`, `Models/AppSettings.swift`,
+  `Models/GuidanceBand.swift`, `Services/SettingsStore.swift`; the ⋯ menu placeholder +
+  `showSettingsStub` alert in `Views/DailyUseView.swift` (replace with the PIN pad).
+- **Build the retest reminder + widget:** SPEC.md → "Retest reminder + widget — design
+  plan" (whole section). Hook into the existing `AppModel.scheduleRetestReminder()` /
+  `cancelRetestReminder()` / `writeWidgetSnapshot(...)` stubs (`ViewModels/AppModel.swift`)
+  and `ContentView.onOpenURL`. New files: `Services/ReminderService.swift` + a Widget target.
+- **Wire real persistence:** `Services/ReadingsStore.swift`, `Services/SettingsStore.swift`
+  (both currently return stubs); `Models/GlucoseReading.swift`, `AppSettings.swift` for the
+  Codable shapes. `AppModel.confirmReading(_:)` already calls `readingsStore.append(_:)`.
 
 ## Open questions
 
-_None._ All planning questions are resolved in SPEC.md. Remaining unknowns are build-time
-mechanics only (e.g. App Group entitlement needs a real bundle ID / signing — deferred to the
-widget build session; TTS voice/rate tuning; exact keypad sizing on-device).
+_None blocking._ Remaining unknowns are build-time mechanics only: App Group entitlement
+needs a real bundle ID / signing (widget session); TTS voice/rate final tuning on-device;
+**OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime is
+installable on this Xcode (the 6s can't pair with iOS 18.5/26.5). Layout floor is covered
+by the "Jinsula SE (layout floor)" simulator (SE 2nd gen = same 375×667pt screen).

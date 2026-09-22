@@ -14,7 +14,10 @@ enum Theme {
     static let emergency = Color(red: 0.85, green: 0.11, blue: 0.09) // red
     static let low       = Color(red: 0.92, green: 0.55, blue: 0.05) // orange
     static let inRange   = Color(red: 0.18, green: 0.68, blue: 0.28) // green
-    static let high      = Color(red: 0.90, green: 0.72, blue: 0.10) // amber
+    // Darkened amber so white text clears WCAG AA (~4.7:1) — one consistent
+    // rule (white text on every band), no per-band text-colour special case.
+    // See SPEC.md open question "Amber high band contrast".
+    static let high      = Color(red: 0.64, green: 0.40, blue: 0.02) // amber
 
     static func colour(for severity: GuidanceBand.Severity) -> Color {
         switch severity {

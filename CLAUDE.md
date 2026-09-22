@@ -18,10 +18,10 @@ ViewModels/
 Services/
   SettingsStore.swift    – JSON persistence for settings (stub)
   ReadingsStore.swift    – JSON persistence for readings (stub)
-  SpeechService.swift    – AVSpeechSynthesizer wrapper (stub)
+  SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
-  DailyUseView.swift     – grandma's everyday screen (placeholder)
-  ResultCardView.swift   – full-screen colour guidance card (placeholder)
+  DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
+  ResultCardView.swift   – full-screen colour guidance card, renders from band (BUILT)
   SetupView.swift        – family-only config, behind the lock (placeholder)
   HistoryView.swift      – past readings list (placeholder)
 Theme/

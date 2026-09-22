@@ -14,6 +14,12 @@ final class AppModel: ObservableObject {
     @Published private(set) var settings: AppSettings
     @Published private(set) var readings: [GlucoseReading]
 
+    /// Open-entry intent (SPEC.md "Retest reminder + widget" §0). Set when a
+    /// widget or notification tap should land on a **blank** entry screen;
+    /// `DailyUseView` observes it, dismisses the result card *and* clears the
+    /// field, then clears the flag. Idempotent across both sources.
+    @Published var shouldStartFreshEntry = false
+
     private let settingsStore: SettingsStoring
     private let readingsStore: ReadingsStoring
 
@@ -28,8 +34,56 @@ final class AppModel: ObservableObject {
     }
 
     /// Evaluates a typed reading against the configured bands.
-    /// Persistence wiring comes in a later session.
     func band(for value: Double) -> GuidanceBand? {
         BandEvaluator.band(for: value, in: settings.bands)
+    }
+
+    /// The single "a reading was just confirmed" hook (SPEC.md "Retest reminder
+    /// + widget" §0). Matches the band **once**, and only if a band matches does
+    /// it commit the side effects in one place: log the `GlucoseReading`, cancel
+    /// any pending retest reminder, and write the widget snapshot.
+    ///
+    /// Returns the matched band so `DailyUseView` can present the card, or `nil`
+    /// for out-of-band input — in which case **nothing is logged and no snapshot
+    /// is written**, and the view stays on the entry screen (a typo is never
+    /// recorded). The `nil` path is defensive: with contiguous open-ended bands
+    /// an in-range value always matches.
+    func confirmReading(_ value: Double) -> GuidanceBand? {
+        guard let band = band(for: value) else { return nil }
+
+        let reading = GlucoseReading(value: value, date: Date(), unit: settings.unit)
+        readingsStore.append(reading)
+        readings.append(reading)
+
+        cancelRetestReminder()
+        writeWidgetSnapshot(for: reading, severity: band.severity)
+
+        return band
+    }
+
+    /// Called when a low-band card's "Remind me in 15 minutes" is tapped.
+    /// The real scheduling lands in Session 3's `ReminderService`; this reserves
+    /// the call site so the confirm/result path isn't re-touched later.
+    func scheduleRetestReminder() {
+        // TODO (Session 3): ReminderService.scheduleRetest() (+15/+30 min).
+    }
+
+    /// Clears the open-entry intent after `DailyUseView` has consumed it.
+    func consumeFreshEntry() {
+        shouldStartFreshEntry = false
+    }
+
+    // MARK: - Stubbed collaborators (wired in later build sessions)
+
+    /// A new confirmed reading supersedes any pending retest nudge.
+    private func cancelRetestReminder() {
+        // TODO (Session 3): ReminderService.cancelRetest().
+    }
+
+    /// Writes the tiny {value, unit, date, severity} snapshot to the App Group
+    /// container and reloads widget timelines.
+    private func writeWidgetSnapshot(for reading: GlucoseReading,
+                                     severity: GuidanceBand.Severity) {
+        // TODO (widget session): needs the App Group entitlement / real bundle ID.
     }
 }

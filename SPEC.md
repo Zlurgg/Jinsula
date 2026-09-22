@@ -131,7 +131,9 @@ screen §5"); everything behind it is locked. Reads from `AppModel` only.
   body also repeats. **Stop speaking** when the card is dismissed (`stop()`).
 - **Audio session:** configure `AVAudioSession` to `.playback` so guidance is heard **even
   when the ring/silent switch is on** — this is a safety app, silence must not mute a
-  low-glucose warning. (Record as a build decision.)
+  low-glucose warning. **BUILT (Session 6):** `.playback` + `.duckOthers`; utterances use the
+  `en-GB` voice at `AVSpeechUtteranceDefaultSpeechRate * 0.9` (slightly slow for clarity);
+  `SpeechService.speak(headline:detail:)` speaks the two lines in sequence, `stop()` on dismiss.
 - Emergency bands may be spoken slightly slower for clarity (nice-to-have, not v1-critical).
 
 ### 4. Flow back
@@ -363,6 +365,11 @@ No code is written during the planning sessions.
    stay fixed even behind the PIN.
 6. **Build sessions — one feature per session**, each followed by review + test on a
    physical iPhone 6s and a physical iPad.
+   - ✅ **Session 6 — Daily-use screen built** (keypad → `ResultCardView` → speech) + the
+     two shared `AppModel` hooks (`confirmReading(_:)`, `shouldStartFreshEntry`); default
+     bands made amount-free; amber darkened. Verified at the 4.7" layout floor (SE-2nd-gen
+     sim); OS-floor (iOS 15) sign-off still physical-6s-only.
+   - Next: setup screen + PIN, retest reminder + widget, real persistence.
 
 ## Open questions
 
@@ -377,7 +384,8 @@ No code is written during the planning sessions.
       calculation.
 - [x] **Amber `high` band contrast → darken the amber** in `Theme` until white text
       passes WCAG; keep white text across all bands (one consistent rule, no per-band
-      text-colour special case).
+      text-colour special case). **BUILT (Session 6):** `Theme.high` = `(0.64, 0.40, 0.02)`,
+      ~4.7:1 with white (AA); verified via card preview render.
 - [x] **Call action with no contact configured → hide the button.** If `settings.contacts`
       is empty, a `.callContact` band shows its headline/detail only, no dead button. (Setup
       should strongly encourage adding a contact.)

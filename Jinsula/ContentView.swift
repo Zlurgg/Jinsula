@@ -9,8 +9,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var model: AppModel
+
     var body: some View {
         DailyUseView()
+            // Widget deep link (jinsula://check) → shared open-entry intent.
+            // The notification-tap source is wired in Session 3.
+            .onOpenURL { url in
+                if url.scheme == "jinsula" {
+                    model.shouldStartFreshEntry = true
+                }
+            }
     }
 }
 
