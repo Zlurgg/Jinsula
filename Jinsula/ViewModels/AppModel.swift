@@ -20,17 +20,28 @@ final class AppModel: ObservableObject {
     /// field, then clears the flag. Idempotent across both sources.
     @Published var shouldStartFreshEntry = false
 
+    /// Whether a family PIN currently gates the setup screen. Derived from the
+    /// Keychain (SPEC.md §5) and mirrored here as published state so the setup
+    /// door and the Lock section react the moment a PIN is set.
+    @Published private(set) var hasPIN: Bool
+
     private let settingsStore: SettingsStoring
     private let readingsStore: ReadingsStoring
+    private let pinStore: PINStoring
 
-    /// Stores are injectable for tests; `nil` uses the JSON-backed defaults.
-    init(settingsStore: SettingsStoring? = nil, readingsStore: ReadingsStoring? = nil) {
+    /// Stores are injectable for tests; `nil` uses the JSON-/Keychain-backed defaults.
+    init(settingsStore: SettingsStoring? = nil,
+         readingsStore: ReadingsStoring? = nil,
+         pinStore: PINStoring? = nil) {
         let settingsStore = settingsStore ?? SettingsStore()
         let readingsStore = readingsStore ?? ReadingsStore()
+        let pinStore = pinStore ?? PINStore()
         self.settingsStore = settingsStore
         self.readingsStore = readingsStore
+        self.pinStore = pinStore
         self.settings = settingsStore.load()
         self.readings = readingsStore.load()
+        self.hasPIN = pinStore.hasPIN
     }
 
     /// Evaluates a typed reading against the configured bands.
@@ -81,6 +92,20 @@ final class AppModel: ObservableObject {
     func commitSettings(_ newSettings: AppSettings) {
         settings = newSettings
         settingsStore.save(newSettings)
+    }
+
+    // MARK: - Setup PIN (SPEC.md §5)
+
+    /// True only when `pin` matches the stored PIN. Used by the unlock pad.
+    func verifyPIN(_ pin: String) -> Bool {
+        pinStore.verify(pin)
+    }
+
+    /// Stores (or replaces) the setup PIN and flips `hasPIN`, so the gate is
+    /// live immediately. There is no recovery flow — see `PINStore` / SPEC.md §5.
+    func setPIN(_ pin: String) {
+        pinStore.setPIN(pin)
+        hasPIN = true
     }
 
     // MARK: - Stubbed collaborators (wired in later build sessions)

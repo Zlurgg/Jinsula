@@ -18,12 +18,14 @@ ViewModels/
 Services/
   SettingsStore.swift    – JSON persistence for settings (real: atomic, safe-fallback)
   ReadingsStore.swift    – JSON persistence for readings (stub)
+  PINStore.swift         – Keychain wrapper for the setup PIN (injectable; not in JSON)
   SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
   DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
   ResultCardView.swift   – full-screen colour guidance card, renders from band (BUILT)
   SetupView.swift        – family-only config: Form editing a working copy, commit-on-Done
-                           (bands/units/contacts BUILT; PIN gate still TODO)
+                           (bands/units/contacts + Lock/PIN section BUILT)
+  PINEntryView.swift     – 4-digit PIN pad (.unlock/.set) + SetupGateView (gates the ⋯ door)
   HistoryView.swift      – past readings list (placeholder)
 Theme/
   Theme.swift            – all fonts + band colours

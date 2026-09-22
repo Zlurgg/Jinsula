@@ -259,8 +259,8 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
 
 - **BUILT (Session 7).** §0–§3 shipped: the `Form`, working-copy + commit-on-Done via
   `AppModel.commitSettings(_:)`, boundary editor + live preview + reset, units picker, and
-  the contacts editor. `SettingsStore` is now real JSON. **Deferred:** §4 Reminders toggle
-  and §5 Lock/PIN — the ⋯ menu currently opens setup directly (unguarded).
+  the contacts editor. `SettingsStore` is now real JSON.
+- **BUILT (Session 8).** §5 Lock/PIN shipped (see §5 note). **Deferred:** §4 Reminders toggle.
 
 ### 1. Band editing — DECIDED: edit boundaries only
 - The five bands are **fixed in count, severity, action, and headline**. Family edits only the
@@ -329,6 +329,15 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
 - **DECIDED (Session 5) — no PIN recovery.** There is no reset/recovery flow: if the PIN is
   forgotten, reinstalling the app resets everything (settings are local JSON and would be wiped
   anyway). Acceptable because setup is rare and family-managed.
+- **BUILT (Session 8).** `Services/PINStore.swift` (Keychain `PINStoring`, injectable; PIN kept
+  out of the settings JSON), `Views/PINEntryView.swift` (one big keypad, `.unlock` + `.set`
+  modes) and `SetupGateView` (what the ⋯ door presents: PIN pad first when `hasPIN`, else setup
+  directly). `AppModel` gained `hasPIN` / `verifyPIN(_:)` / `setPIN(_:)`. **Interpretation of
+  "prompt at the end":** rather than a fragile post-Done modal, the set/change-PIN control is a
+  **Lock section at the bottom of the setup `Form`** — Form-native and reachable only once already
+  inside setup. `AppSettings.isLocked` is left unused for now; gating is driven entirely by
+  `hasPIN` (Keychain presence). PINStore + AppModel wiring runtime-verified via `RunCodeSnippet`;
+  the interactive taps are unverified (no UI-test target / no `idb`).
 
 ## Devices & platform decisions
 

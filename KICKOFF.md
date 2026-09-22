@@ -5,58 +5,56 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## State
 
-- **Setup screen is BUILT and compiles** (iOS 15 / universal). `SetupView` is a
-  `NavigationView` + `Form` editing a **working copy** of `AppSettings`, committed only
-  on "Done" via `AppModel.commitSettings(_:)` (Cancel discards). Sections: Who / Units
-  (segmented, no-conversion note) / Reading thresholds (four boundary fields written to
-  both adjacent bands so ranges stay contiguous; positive-and-increasing validation gates
-  Done; **Reset to defaults** restores **unit *and* bands**) / per-band `detail` wording
-  (headlines fixed) / live Preview / Emergency contacts (add/edit/delete, first = primary,
-  empty-list nudge). The ⋯ menu on the daily screen opens it as a sheet.
-- **`SettingsStore` is now real** — atomic Codable JSON in Documents, missing/corrupt file
-  falls back to the safe UK defaults. `ReadingsStore` is still a stub.
-- **Verified partially:** `SetupView` renders correctly (preview) and the app launches on the
-  booted SE sim. The interactive flow (present / commit / persist-across-relaunch / cancel /
-  validation / reset / contact edit) was **NOT driven** — there is no UI-test target and no
-  `idb`, so nothing scripts taps. Real bundle id observed: `uk.co.zlurgg.Jinsula`.
-- **Not yet done:** PIN gate + Keychain, reminders toggle + `ReminderService`, the widget
-  target + App Group, `ReadingsStore` persistence, and the **app icon (still the Xcode default)**.
-  The ⋯ setup door is currently **unguarded**.
+- **PIN gate is BUILT and compiles** (Session 8, iOS 15 / universal). New
+  `Services/PINStore.swift` (Keychain `PINStoring`, injectable; PIN kept out of the settings
+  JSON) and `Views/PINEntryView.swift` (one big keypad, `.unlock` + `.set` modes) + `SetupGateView`
+  (what the ⋯ door presents: PIN pad first when `hasPIN`, else setup directly). `AppModel` gained
+  `hasPIN` / `verifyPIN(_:)` / `setPIN(_:)`. Set/change-PIN lives as a **Lock section at the bottom
+  of the setup `Form`** (SPEC §5 note). `AppSettings.isLocked` left unused — gating is driven by
+  `hasPIN` (Keychain presence).
+- **Verified:** PINStore (real Keychain) + AppModel wiring runtime-verified via `RunCodeSnippet`
+  (14 assertions). App **builds, installs, and launches** on "Jinsula SE (layout floor)" (iOS 18.5);
+  the first-run gate path (no PIN → setup opens directly) and settings persistence confirmed on
+  screen. Interactive taps (scroll to Lock → set → relaunch-gated → unlock) **not driven** — no
+  UI-test target / no `idb`.
+- **This is the MVP baseline for real-world testing** — the app now goes onto the iPad and is
+  handed to the user for testing. Bundle id `uk.co.zlurgg.Jinsula`.
+- **Not yet done:** the widget (next session), the reminders toggle + `ReminderService`,
+  `ReadingsStore` persistence (**demoted to v2**), and the **app icon (still the Xcode default)**.
 
 ## Next session — pick one
 
-1. **PIN gate + widget — MVP for an iPad demo (default).** Smallest thing that gates the
-   setup door and shows a Home Screen widget, so it can be demoed on a physical iPad. Keep
-   both bare-bones: a 4-digit Keychain PIN in front of `SetupView`, and a widget that reads
-   the last snapshot. `ReminderService` can stay stubbed for the demo.
-2. **Wire real persistence** (`ReadingsStore` JSON) — small; makes logged readings survive
-   and gives the widget snapshot real data.
-3. **App icon pass** — replace the default Xcode icon (`Assets.xcassets/AppIcon`); its own
-   short session (asset design + all required sizes).
+1. **Widget — the MVP piece (default).** A Home Screen widget that shows the last reading and,
+   tapped, opens number entry. Needs a **new Widget Extension target + App Group entitlement**
+   on `uk.co.zlurgg.Jinsula` — target creation is Xcode-UI work (can't be done reliably from code
+   edits), so budget the first part of the session for that, then wire the code.
+2. **App icon pass** — replace the default Xcode icon; its own short session (asset + all sizes).
+3. **Reminders toggle + `ReminderService`** — the §4 setup piece deferred twice now.
+
+Deferred to **v2:** `ReadingsStore` JSON persistence (logged readings surviving relaunch).
 
 ## Load in
 
-- **PIN gate + widget:**
-  - PIN: SPEC.md → "Setup screen — design plan" §5 (Lock — 4-digit PIN) + §0. Files:
-    `Views/DailyUseView.swift` (the `showingSetup` sheet + ⋯ menu — put a PIN pad in front),
-    `Views/SetupView.swift` (the gated screen), `Models/AppSettings.swift` (`isLocked`;
-    add `hasPIN` derived from Keychain). New: `Services/PINStore.swift` (Keychain wrapper).
-    First-run: no PIN → setup opens directly, prompt to set one at the end (optional).
-  - Widget: SPEC.md → "Retest reminder + widget — design plan" (whole section). Hook into
-    `AppModel.writeWidgetSnapshot(_:severity:)` (stub) and `ContentView.onOpenURL`
-    (`jinsula://check`). New: a Widget Extension target + App Group entitlement on bundle id
-    **`uk.co.zlurgg.Jinsula`**.
-- **Wire real persistence:** `Services/ReadingsStore.swift` (stub); `Models/GlucoseReading.swift`
-  for the Codable shape. Mirror the now-real `Services/SettingsStore.swift`.
-- **App icon pass:** `Jinsula/Assets.xcassets/AppIcon.appiconset`.
+- **Widget:**
+  - SPEC.md → "Retest reminder + widget — design plan" §2 (Home Screen widget — whole subsection:
+    App Group snapshot, `systemMedium`, whole-widget `widgetURL`, iOS 15 no interactive buttons).
+  - Code hooks already stubbed: `AppModel.writeWidgetSnapshot(for:severity:)` (fill in — write the
+    tiny {value, unit, date, severity} JSON to the App Group container + `WidgetCenter.reloadAllTimelines()`),
+    and `ContentView.onOpenURL` (`jinsula://check` → `shouldStartFreshEntry`, already wired).
+  - `Models/GlucoseReading.swift` for the snapshot shape; `Models/GuidanceBand.swift` for `Severity`.
+  - New: a Widget Extension target + App Group entitlement on `uk.co.zlurgg.Jinsula`.
+- **App icon pass:** `Jinsula/Jinsula/Assets.xcassets/AppIcon.appiconset`.
+- **Reminders toggle + `ReminderService`:** SPEC.md → "Retest reminder + widget" §1 (local
+  notification) + §4 in "Setup screen"; `AppModel.scheduleRetestReminder()` / `cancelRetestReminder()`
+  (both stubbed).
 
 ## Open questions
 
-- **App icon** is still the default — needs its own pass (candidate topic 3).
-- **Interactive setup flow is unverified** — no UI-test target / no `idb` in this project.
-  To get replayable end-to-end verification, add a UI-test target using XCUIAutomation.
-- **Call button dialing unverified** — `tel:` URLs no-op in the Simulator; needs a physical
-  device (part of the physical-device sign-off).
-- **OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime installable
-  on this Xcode. Layout floor covered by the "Jinsula SE (layout floor)" simulator.
-- **Widget App Group** needs the entitlement wired to `uk.co.zlurgg.Jinsula` (build-mechanics).
+- **Interactive PIN + setup flow is unverified** — no UI-test target / no `idb`. Real-world iPad
+  testing (this session's handover) is the first true end-to-end check; a UI-test target
+  (XCUIAutomation) would make it replayable.
+- **App icon** is still the default — needs its own pass (candidate topic 2).
+- **Widget App Group** entitlement must be wired to `uk.co.zlurgg.Jinsula` (build-mechanics).
+- **Call button dialing unverified** — `tel:` URLs no-op in the Simulator; the iPad handover is
+  the chance to confirm dialing on a physical device.
+- **OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime on this Xcode.

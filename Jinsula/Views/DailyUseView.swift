@@ -22,8 +22,8 @@ struct DailyUseView: View {
     @State private var showingCard = false
     /// Shown when confirm is tapped on an implausible / unmatched value.
     @State private var showTryAgain = false
-    /// Presents the family-only setup screen. The PIN gate that should sit in
-    /// front of this is a follow-up; for now the ⋯ menu opens setup directly.
+    /// Presents the family-only setup screen via `SetupGateView`, which shows the
+    /// PIN pad first when a PIN is set (SPEC.md §5) and opens setup directly otherwise.
     @State private var showingSetup = false
 
     private var unit: GlucoseUnit { model.settings.unit }
@@ -73,7 +73,7 @@ struct DailyUseView: View {
             model.consumeFreshEntry()
         }
         .sheet(isPresented: $showingSetup) {
-            SetupView(settings: model.settings)
+            SetupGateView()
                 .environmentObject(model)
         }
     }
@@ -83,11 +83,11 @@ struct DailyUseView: View {
     private var header: some View {
         HStack {
             Spacer()
-            // Discreet ⋯ menu — the one sanctioned door to setup. Opens SetupView
-            // directly for now; the PIN gate in front of it is a follow-up.
+            // Discreet ⋯ menu — the one sanctioned door to setup. `SetupGateView`
+            // puts the PIN pad in front when a PIN is set (SPEC.md §5).
             Menu {
                 Button {
-                    showingSetup = true   // TODO: PIN pad in front of this (follow-up)
+                    showingSetup = true
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }

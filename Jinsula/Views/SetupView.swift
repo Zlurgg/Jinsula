@@ -22,6 +22,8 @@ struct SetupView: View {
     /// The working copy: edited freely, committed only on "Done".
     @State private var working: AppSettings
     @State private var showResetConfirm = false
+    /// Presents the PIN pad in "set" mode from the Lock section.
+    @State private var showingSetPIN = false
 
     init(settings: AppSettings) {
         _working = State(initialValue: SetupView.normalised(settings))
@@ -55,6 +57,7 @@ struct SetupView: View {
                 detailSection
                 previewSection
                 contactsSection
+                lockSection
             }
             .navigationTitle("Setup")
             .toolbar {
@@ -71,6 +74,13 @@ struct SetupView: View {
             }
         }
         .navigationViewStyle(.stack)   // consistent full-width form on iPad
+        .sheet(isPresented: $showingSetPIN) {
+            // Set mode dismisses itself on success; `model.hasPIN` then flips the
+            // Lock section to "Change PIN". No committing here — the PIN lives in
+            // the Keychain, not the settings working copy (SPEC.md §5).
+            PINEntryView(mode: .set) {}
+                .environmentObject(model)
+        }
     }
 
     // MARK: - Who this is for
@@ -246,6 +256,28 @@ struct SetupView: View {
             } else {
                 Text("The first contact is the one the daily “Call” button dials.")
             }
+        }
+    }
+
+    // MARK: - Lock (setup PIN)
+
+    /// The one place a family member sets or changes the PIN — reached only from
+    /// inside setup, so whoever is here is already authorised (SPEC.md §5). Reads
+    /// `model` directly, not the working copy: the PIN isn't part of `AppSettings`.
+    private var lockSection: some View {
+        Section {
+            Button {
+                showingSetPIN = true
+            } label: {
+                Label(model.hasPIN ? "Change PIN" : "Set a PIN",
+                      systemImage: model.hasPIN ? "lock.rotation" : "lock")
+            }
+        } header: {
+            Text("Lock")
+        } footer: {
+            Text(model.hasPIN
+                 ? "A PIN is asked for before these settings open. A forgotten PIN can't be recovered — reinstalling the app resets everything."
+                 : "Set a PIN so these settings can't be changed by accident. Keep it somewhere safe — a forgotten PIN can't be recovered.")
         }
     }
 
