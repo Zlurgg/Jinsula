@@ -139,6 +139,65 @@ from here (setup lives behind the lock). Reads from `AppModel` only.
 - If no band matches (`nil`), show a safe neutral "couldn't read that — try again" state
   rather than an empty card. (Open question — see below.)
 
+## Retest reminder + widget — design plan (Session 3)
+
+Two secondary features that must survive the app being backgrounded or closed. Neither
+adds band logic; both hang off a single new moment — **"a reading was just confirmed"** —
+and a single shared **"open blank entry"** intent.
+
+### 0. Two shared hooks these features need
+- **Reading-confirmed hook.** On confirm (see §"Daily-use screen — Flow back") the app
+  will, in one place: log the `GlucoseReading`, cancel any pending retest reminder, and
+  write the widget snapshot. Wiring is a build session; this plan assumes that single call
+  site exists.
+- **Open-entry intent.** Both a notification tap and a widget tap must land on a **blank
+  entry screen** (dismiss any result card, clear the field). One published flag on
+  `AppModel` (e.g. `shouldStartFreshEntry`), fed by `onOpenURL` (widget) and the
+  notification delegate; `ContentView`/`DailyUseView` observe it and reset.
+
+### 1. Retest reminder (local notification)
+- **Trigger:** only the Low (orange) band's `.retestTimer` action ("Remind me in 15
+  minutes"). Must fire even after she's left the app — hence a notification, not an in-app
+  timer.
+- **New service `Services/ReminderService.swift`** (`UserNotifications`, all iOS 15-safe):
+  - `requestAuthorization() async -> Bool`
+  - `scheduleRetest()` — schedules **two** `UNTimeIntervalNotificationTrigger`s at **+15 min
+    and +30 min**, non-repeating, with fixed identifiers so re-tapping replaces rather than
+    stacks (only ever one pair pending).
+  - `cancelRetest()` — removes both pending requests.
+- **DECIDED — one gentle re-nudge.** The reminder fires at 15 min; if she hasn't acted, a
+  second fires ~15 min later, then stops. Implemented by scheduling both up front and
+  cancelling the survivor when she engages: opening the app / confirming a new reading
+  cancels both; tapping the first notification cancels the second.
+- **DECIDED — copy reinforces the core safety line:**
+  - Title: "Time to check your sugar again"
+  - Body: "Please test your sugar again now. If it's still low, eat sugar — do not take insulin."
+- **Permission timing:** requested contextually on the **first** tap of the reminder button,
+  in plain wording. If denied, the card still flows normally — we just can't remind; Session 4
+  setup also offers to enable notifications up front.
+- **Tap handling:** `UNUserNotificationCenterDelegate` (wired via `UIApplicationDelegateAdaptor`)
+  → the shared open-entry intent. Foreground: present banner + sound if the app is open when
+  it fires.
+
+### 2. Home Screen widget (shows last reading, tap opens entry)
+- **New Widget Extension target** (WidgetKit + SwiftUI).
+- **DECIDED — data sharing = App Group + a tiny shared JSON snapshot.** On each confirm the
+  app writes a small `{value, unit, date, severity}` snapshot to the group container and calls
+  `WidgetCenter.shared.reloadAllTimelines()`. Writing the **severity** (not the whole bands
+  array) keeps the widget dumb — no `BandEvaluator` or settings in the extension, just a colour
+  and text. `Theme` is shared into the extension for the band colour.
+- **Content:** band-coloured background (traffic light), the reading value + unit, and the
+  **time of day** it was taken (e.g. "08:15") — absolute time needs no timeline refresh and
+  reads clearer for grandma than a relative "2h ago". Empty state before any reading: a neutral
+  "Tap to check your sugar".
+- **DECIDED — size = `systemMedium`** for v1 (room for value + time + a clear "Tap to check"
+  label). Lock Screen / accessory widgets are iOS 16+ → deferred as a later-OS extra.
+- **Interaction:** iOS 15 has no interactive widget buttons — the **whole widget is one
+  `.widgetURL`** deep link (`jinsula://check`) → the shared open-entry intent (same path as the
+  notification tap).
+- **Timeline:** the snapshot only changes when the app writes a new reading, so the provider
+  simply reloads on `reloadAllTimelines()`; absolute time avoids any periodic refresh.
+
 ## Devices & platform decisions
 
 - **UK-based → mmol/L default.** (mg/dL kept in the model for future regions.)
@@ -185,9 +244,10 @@ No code is written during the planning sessions.
 ## Open questions
 
 - [x] **Retest reminder → local notification** (survives backgrounding; the 15-min wait
-      must fire even if she's left the app). Details in Session 3.
+      must fire even if she's left the app). Detailed in "Retest reminder + widget — design
+      plan" §1: one gentle re-nudge (+15/+30 min), safety-reinforcing copy.
 - [x] **Widget → shows the last reading** (not launch-only); tapping it opens number entry.
-      Details in Session 3.
+      Detailed in §2: App Group snapshot, `systemMedium`, whole-widget `widgetURL`.
 - [x] **No age/weight/dose info collected or computed.** Per safety principle #2 the app
       only logs the reading with its **time of day** (already captured by
       `GlucoseReading.date`) and shows the **traffic-light band** — nothing feeds a dose
