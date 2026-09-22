@@ -198,6 +198,75 @@ and a single shared **"open blank entry"** intent.
 - **Timeline:** the snapshot only changes when the app writes a new reading, so the provider
   simply reloads on `reloadAllTimelines()`; absolute time avoids any periodic refresh.
 
+## Setup screen — design plan (Session 4)
+
+The rare, family-only screen behind the lock. Everything here is accident-prevention
+and care-plan matching — it must never become a place where a wrong tap makes daily use
+unsafe. Persists one `AppSettings` via `SettingsStore`; edits a **working copy** and only
+commits on "Done", so a half-edited band array never reaches the daily-use card.
+
+### 0. Structure
+A single `NavigationView` + `Form` (iOS 15-safe, renders well on iPad). Sections in order:
+**Who this is for → Units → Reading bands → Emergency contacts → Reminders → Lock**. "Done"
+validates, commits through `AppModel` → `SettingsStore`, relocks, returns to daily use.
+
+### 1. Band editing — DECIDED: edit boundaries only
+- The five bands are **fixed in count, severity, action, and headline**. Family edits only the
+  **four interior thresholds** T1<T2<T3<T4 and each band's **`detail`** text.
+- The editor is a *projection* over the existing `[GuidanceBand]` — **no model change**. It reads
+  the four shared boundaries and writes each back to **both** adjacent bands (band N's `upper` ==
+  band N+1's `lower`), so ranges stay contiguous **by construction**:
+
+  | Band | Range | Severity | Action | Headline (fixed) |
+  |---|---|---|---|---|
+  | 1 | below T1 | emergency | callContact | "Get help now" |
+  | 2 | T1–T2 | low | retestTimer | "Eat sugar now — do NOT take insulin" |
+  | 3 | T2–T3 | inRange | none | "Your reading is fine" |
+  | 4 | T3–T4 | high | none | "Follow the plan from your nurse" |
+  | 5 | above T4 | emergency | callContact | "Reading very high" |
+
+  Defaults T1=3.0, T2=4.0, T3=9.0, T4=15.0 (mmol/L).
+- **Why headlines/actions are fixed:** the headlines carry the non-negotiable safety lines
+  (esp. "do NOT take insulin", safety principle #2). Family tunes only the supporting `detail`
+  (specific foods/amounts, their own care-plan wording) — they cannot delete a safety line.
+  *(Flag for Session 5 veto if family needs headline control.)*
+- **Validation:** thresholds must be strictly increasing and positive; "Done" is disabled with
+  an inline message otherwise. A live preview shows the five resulting bands (colour swatch +
+  range + headline) so family sees the effect before saving.
+- **Consequence:** because coverage is now provably `nil…nil` and contiguous, `band(for:)` can
+  never return `nil` for a real reading — the `== nil` case in `BandEvaluator` becomes purely
+  defensive (retires that open question).
+
+### 2. Units
+- Picker mmol/L (default) | mg/dL. Bands are plain numbers interpreted in `settings.unit`.
+- **OPEN (safety-sensitive):** switching unit must **convert the four thresholds** (×/÷ 18.0182,
+  rounded to a sensible step) and show the converted numbers for family to confirm — never leave
+  e.g. `4.0` reinterpreted as 4.0 mg/dL. Recommend convert-then-confirm; finalise in build.
+
+### 3. Emergency contacts
+- List of `EmergencyContact` (name + phone): add / edit / delete. **First = primary**, the one the
+  daily-use "Call [name]" button dials.
+- **Touch-point (Session 3):** strongly encourage ≥1 contact — visible nudge when the list is
+  empty, because the emergency/very-high `callContact` button **hides** with no contact. Setup is
+  the right place to make sure that safety button will exist.
+
+### 4. Reminders
+- Toggle "Remind me to re-test". Turning it on calls `ReminderService.requestAuthorization()`
+  (offered up front here, per Session 3; also requested contextually on first reminder tap).
+  If denied, reflect it with a hint to iOS Settings — daily use still flows, we just can't remind.
+
+### 5. Lock — DECIDED: 4-digit PIN
+- **Gates by knowledge, not identity** — right for grandma's own device, where biometrics would
+  enroll *her*, not the family member.
+- **PIN stored in Keychain**, not the plaintext settings JSON. `AppSettings.isLocked` reflects
+  whether setup is currently gated; `hasPIN` derives from Keychain presence.
+- **Entry from daily use:** a small, discreet gear in a corner; if `hasPIN`, tapping it shows a
+  PIN pad → correct PIN opens setup. The four digits are the real gate against accidental entry.
+- **First run:** no PIN, setup opens directly; at the end, prompt "Set a PIN so this can't be
+  changed by accident." PIN strongly encouraged but optional.
+- **OPEN (minor):** PIN recovery. Leaning: no recovery flow — reinstall resets (settings are local
+  JSON and would be wiped anyway). Confirm in build.
+
 ## Devices & platform decisions
 
 - **UK-based → mmol/L default.** (mg/dL kept in the model for future regions.)
@@ -264,3 +333,10 @@ No code is written during the planning sessions.
       but `band(for:) == nil` (a gap in the configured bands), show the same safe try-again
       state rather than an empty card. Defaults contiguous + open-ended, so `nil` is a
       defensive case only.
+- [x] **Setup lock → 4-digit PIN** (knowledge-gated, PIN in Keychain). Detailed in "Setup
+      screen — design plan" §5. Biometrics rejected (would enroll grandma, not family).
+- [x] **Band editing → boundaries only** (four editable thresholds over a fixed 5-band shape;
+      contiguity by construction). Detailed in §1. Headlines/actions fixed to protect safety copy.
+- [ ] **Unit switch converts thresholds** (mmol/L ↔ mg/dL, convert-then-confirm) — recommended
+      in §2, finalise in build.
+- [ ] **PIN recovery** — leaning "none, reinstall resets"; confirm in build (§5).
