@@ -366,9 +366,20 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   `hasPIN` (Keychain presence). PINStore + AppModel wiring runtime-verified via `RunCodeSnippet`;
   the interactive taps are unverified (no UI-test target / no `idb`).
 
-## App icon — design plan (Session 12)
+## App icon — design plan (Session 12) → BUILT (Session 13)
 
-Plan only — no code written this session. Ready to build next session.
+**BUILT (Session 13).** `Scripts/GenerateAppIcon.swift` (standalone Swift+CoreGraphics,
+**not a member of any Xcode target**) renders one opaque 1024×1024 `icon-1024.png` into
+`Jinsula/Assets.xcassets/AppIcon.appiconset/`; `Contents.json` points its universal-iOS
+1024 slot at that file (dark/tinted/Mac slots left empty → fall back to primary). Design:
+a red **blood droplet** (`Theme.emergency`) on a soft off-white background, with a
+**vertical traffic-light accent** — three lights red/amber/green (`Theme.emergency` /
+`.high` / `.inRange`) sitting on a neutral rounded "housing" inside the droplet so the red
+top light stays visible against the red body. Palette is `Theme` verbatim; no text.
+**Verified:** `actool` compiles the catalog with no missing-icon warning and downscales
+correctly to iPhone (`60x60@2x`) + iPad (`76x76@2x~ipad`); PNG is opaque (`hasAlpha: no`);
+and the icon renders on a running **iPad (A16) simulator** home screen. Regenerate anytime
+with `swift Scripts/GenerateAppIcon.swift` — proportions/dot layout are all code, easy to tweak.
 
 - **Concept — DECIDED:** a bold blood **droplet** (the primary mark) with a small
   **red / amber / green traffic-light accent**, tying the icon to the guidance-band
@@ -451,8 +462,12 @@ No code is written during the planning sessions.
      setup Reminders toggle (`AppSettings.remindersEnabled`, default ON, gates scheduling),
      DEBUG 8s/16s interval removed (real 15/30 min in every build). Verified on the iPad sim.
    - ✅ **Session 12 (planning) — app icon design plan** (droplet + traffic-light accent,
-     generated programmatically). See "App icon — design plan" above. Build next.
-   - Next: build the app icon; on-device verification; run the test suite once signing is fixed.
+     generated programmatically). See "App icon — design plan" above.
+   - ✅ **Session 13 — app icon built** (`Scripts/GenerateAppIcon.swift` → `icon-1024.png`,
+     `Contents.json` wired). Verified via `actool` + a running iPad simulator; physical-iPad
+     install still blocked by the Xcode `-1009` signing/login issue.
+   - Next: on-device verification (needs the `-1009` login fixed); run the test suite once
+     signing is fixed; v2 (`ReadingsStore`, icon dark/tinted variants).
 
 ## Open questions
 

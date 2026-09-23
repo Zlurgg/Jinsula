@@ -49,6 +49,14 @@ JinsulaWidget/           – Widget Extension (systemMedium, iOS 15). Reads Widg
 JinsulaTests/            – Swift Testing target (ReminderServiceTests; @testable import Jinsula).
 ```
 
+Not an Xcode target — a standalone script:
+```
+Scripts/GenerateAppIcon.swift  – Swift+CoreGraphics renderer for the app icon (droplet +
+                                 traffic-light, Theme palette). Run: `swift Scripts/GenerateAppIcon.swift`
+                                 → opaque 1024 icon-1024.png into the app AppIcon.appiconset.
+                                 NOT a member of any target; editable/reproducible source of the icon.
+```
+
 ## Conventions / constraints
 
 - **Target iOS 15** (old-device support) → use `ObservableObject`, NOT `@Observable`;
