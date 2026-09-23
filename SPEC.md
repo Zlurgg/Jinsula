@@ -366,6 +366,30 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   `hasPIN` (Keychain presence). PINStore + AppModel wiring runtime-verified via `RunCodeSnippet`;
   the interactive taps are unverified (no UI-test target / no `idb`).
 
+## App icon — design plan (Session 12)
+
+Plan only — no code written this session. Ready to build next session.
+
+- **Concept — DECIDED:** a bold blood **droplet** (the primary mark) with a small
+  **red / amber / green traffic-light accent**, tying the icon to the guidance-band
+  metaphor. High-contrast, no text, friendly for an elderly user.
+- **Palette — reuse `Theme` exactly:** red `(0.85, 0.11, 0.09)` (emergency), amber
+  `(0.64, 0.40, 0.02)` (high), green `(0.18, 0.68, 0.28)` (in-range). Background a calm
+  neutral (soft off-white/light grey) so the mark pops. No invented colours.
+- **Production — DECIDED: generated programmatically.** A standalone Swift +
+  CoreGraphics/AppKit script (`Scripts/GenerateAppIcon.swift`, **not added to any Xcode
+  target**) draws and exports one flat, **opaque** 1024×1024 PNG. Reproducible and
+  editable; no external art tools. App Store rejects alpha, so render fully opaque; no
+  rounded corners (iOS applies the mask).
+- **Format:** the modern single-slot `AppIcon.appiconset` (one universal iOS 1024 image,
+  Xcode downscales the rest) — supported on the iOS 15 floor. `Contents.json` gets
+  `"filename": "icon-1024.png"` on that slot; the iOS 18 dark/tinted and Mac slots are
+  left empty (fall back to primary) to keep scope tight.
+- **Out of scope:** the widget extension's `AppIcon` (extensions don't surface an app
+  icon); dark/tinted variants (easy code follow-up). Both deferrable.
+- **Verification:** `BuildProject` succeeds with no missing-icon warning; inspect the
+  rendered PNG before wrap-up.
+
 ## Devices & platform decisions
 
 - **UK-based → mmol/L default.** (mg/dL kept in the model for future regions.)
@@ -423,7 +447,12 @@ No code is written during the planning sessions.
      (UNUserNotificationCenter, +15/+30 min, fixed IDs) wired + unit-tested (first `JinsulaTests`
      target). DEBUG interval shortened to 8s/16s for observation — must become a real setting
      before release. Still open (own session): notification foreground/tap delegate + setup toggle.
-   - Next: app icon; finish reminder (foreground + tap + toggle); on-device verification.
+   - ✅ **Sessions 10–11 — retest reminder finished.** Notification foreground/tap delegate,
+     setup Reminders toggle (`AppSettings.remindersEnabled`, default ON, gates scheduling),
+     DEBUG 8s/16s interval removed (real 15/30 min in every build). Verified on the iPad sim.
+   - ✅ **Session 12 (planning) — app icon design plan** (droplet + traffic-light accent,
+     generated programmatically). See "App icon — design plan" above. Build next.
+   - Next: build the app icon; on-device verification; run the test suite once signing is fixed.
 
 ## Open questions
 
