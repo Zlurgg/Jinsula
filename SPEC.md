@@ -86,6 +86,18 @@ the **one exception (Session 5)** is a discreet **⋯ menu** that is PIN-gated (
 screen §5"); everything behind it is locked. Reads from `AppModel` only.
 
 ### 1. Number entry
+
+> **CHANGED (Session 14) — a vertical colour WHEEL replaces the keypad.** To simplify to
+> "just pick a number", entry is now `Views/GlucoseDialView.swift`: a tall drag dial, high
+> value at top / low at bottom, **1.0–33.3 mmol/L**, snap to **0.1**, starting at neutral
+> **7.0**. Each whole-number square is tinted by the band that value falls in (colour from
+> `BandEvaluator` + `Theme` — bands stay the single source of truth), with a fixed centre
+> **selection lens** and **±0.1 nudge buttons** for fine, slip-proof control. `DailyUseView`
+> now holds a `Double` (not a typed string); an out-of-range/typo value is no longer possible,
+> so the "try again" state is defensive only. Confirm button relabelled **"Submit result"** and
+> recoloured **blue** (`Theme.action`, outside the band palette). The confirm→card→widget→
+> reminder pipeline is unchanged. The keypad design below is retained for history.
+
 - **DECIDED: a big custom on-screen keypad**, not a stepper (too many taps to reach 5.6)
   and not the system keyboard (keys too small, decimal keypad is cluttered).
 - Layout: phone-style 3×4 grid — `1‑9`, then bottom row `[ . ] [ 0 ] [ ⌫ ]`, with a
@@ -318,6 +330,12 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
   defensive (retires that open question).
 
 ### 2. Units
+
+> **CHANGED (Session 14) — mg/dL dropped from the setup UI.** The Units picker (and the
+> reset-unit line) were removed; the app is mmol/L-only in practice. The `GlucoseUnit` enum and
+> `AppSettings.unit` field are **retained** for JSON/data compatibility (no migration; the widget
+> snapshot's unit label is unaffected). Re-adding a mg/dL scale would mean rescaling the wheel.
+
 - Picker mmol/L (default UK) | mg/dL. Bands are plain numbers interpreted in `settings.unit`.
 - **DECIDED (Session 5) — no conversion, ever.** The unit is a setup choice that matches the
   user's meter; it is not a live "convert my plan" control. The reading comes off the device
@@ -466,8 +484,15 @@ No code is written during the planning sessions.
    - ✅ **Session 13 — app icon built** (`Scripts/GenerateAppIcon.swift` → `icon-1024.png`,
      `Contents.json` wired). Verified via `actool` + a running iPad simulator; physical-iPad
      install still blocked by the Xcode `-1009` signing/login issue.
+   - ✅ **Session 14 — daily-use input reworked to a vertical colour wheel** (`GlucoseDialView`,
+     replacing the keypad; 1.0–33.3, snap 0.1, band-tinted squares, centre lens, ±0.1 nudges,
+     start 7.0), "Submit result" blue button (`Theme.action`), and **mg/dL removed from the setup
+     UI** (enum/field retained for data compat). Verified on the iPhone 17 simulator. Also
+     diagnosed the **App-Group entitlement-stripping trap**: `-1009`/no-signing builds drop
+     `application-groups` → the widget's shared container is `nil` → widget shows only the
+     placeholder; worked around by manually re-signing with the entitlements plists.
    - Next: on-device verification (needs the `-1009` login fixed); run the test suite once
-     signing is fixed; v2 (`ReadingsStore`, icon dark/tinted variants).
+     signing is fixed; wheel polish; v2 (`ReadingsStore`, icon dark/tinted variants).
 
 ## Open questions
 

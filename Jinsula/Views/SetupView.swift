@@ -55,7 +55,6 @@ struct SetupView: View {
         NavigationView {
             Form {
                 whoSection
-                unitsSection
                 thresholdsSection
                 detailSection
                 previewSection
@@ -96,23 +95,6 @@ struct SetupView: View {
         }
     }
 
-    // MARK: - Units
-
-    private var unitsSection: some View {
-        Section {
-            Picker("Units", selection: $working.unit) {
-                ForEach(GlucoseUnit.allCases, id: \.self) { unit in
-                    Text(unit.shortLabel).tag(unit)
-                }
-            }
-            .pickerStyle(.segmented)
-        } header: {
-            Text("Units")
-        } footer: {
-            Text("Match the units shown on the meter. Readings are used exactly as typed — the app never converts between units.")
-        }
-    }
-
     // MARK: - Reading thresholds (boundary editor)
 
     private var thresholdsSection: some View {
@@ -137,15 +119,12 @@ struct SetupView: View {
         }
         .alert("Reset to defaults?", isPresented: $showResetConfirm) {
             Button("Reset", role: .destructive) {
-                // Full safe default: bands AND unit (mmol/L). The unit switch
-                // itself never converts numbers (SPEC.md §2) — reset is the one
-                // control that puts both back to the guidance-grounded default.
+                // Restore the guidance-grounded default thresholds and wording.
                 working.bands = GuidanceBand.defaultUKBands
-                working.unit = AppSettings.default.unit
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This restores the standard UK units, thresholds and wording. It takes effect when you tap Done.")
+            Text("This restores the standard UK thresholds and wording. It takes effect when you tap Done.")
         }
     }
 

@@ -7,7 +7,8 @@ for the why and the safety rules; `KICKOFF.md` for the current to-do.
 
 ```
 Models/
-  GlucoseUnit.swift      – mmol/L (default) | mg/dL
+  GlucoseUnit.swift      – mmol/L (default) | mg/dL (mg/dL retained for data compat only;
+                           dropped from the setup UI in Session 14 — app is mmol/L in practice)
   GlucoseReading.swift   – one logged reading (Codable)
   GuidanceBand.swift     – "rules as data": range → colour/message/action
                            (+ default UK bands; SAFETY notes inline)
@@ -27,14 +28,20 @@ Services/
                            Scheduling gated on AppSettings.remindersEnabled via AppModel.
   SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
-  DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
+  DailyUseView.swift     – grandma's everyday screen: vertical colour WHEEL → card (BUILT).
+                           Holds a Double (the picked value), not a typed string.
+  GlucoseDialView.swift  – the wheel: high-at-top drag dial, 1.0–33.3, snap 0.1, per-integer
+                           squares band-tinted (BandEvaluator+Theme), centre selection lens,
+                           ±0.1 nudge buttons, VoiceOver-adjustable. Starts at 7.0. (BUILT S14)
   ResultCardView.swift   – full-screen colour guidance card, renders from band (BUILT)
   SetupView.swift        – family-only config: Form editing a working copy, commit-on-Done
-                           (bands/units/contacts + Reminders toggle + Lock/PIN section BUILT)
+                           (bands/contacts + Reminders toggle + Lock/PIN section BUILT;
+                           Units picker removed S14 → mmol/L only)
   PINEntryView.swift     – 4-digit PIN pad (.unlock/.set) + SetupGateView (gates the ⋯ door)
   HistoryView.swift      – past readings list (placeholder)
 Theme/
-  Theme.swift            – all fonts + band colours
+  Theme.swift            – all fonts + band colours + `action` (blue button colour, outside
+                           the band palette)
 ContentView.swift        – root (currently → DailyUseView); onOpenURL(jinsula://) → fresh entry;
                            onAppear wires AppDelegate.model for notification-tap routing
 JinsulaApp.swift         – @main, injects AppModel via .environmentObject; hosts AppDelegate
@@ -66,8 +73,9 @@ Scripts/GenerateAppIcon.swift  – Swift+CoreGraphics renderer for the app icon 
 - **Never compute an insulin dose, and never name amounts/doses.** The app gives direction
   (low/okay/high, sugar vs insulin, retest in 15 min), never quantities. See SPEC.md safety
   principles #2 & #5.
-- **No unit conversion.** The unit (`settings.unit`, default UK mmol/L) is a setup choice
-  matching the meter; readings are used as-is in that unit. No ×/÷ 18.0182 anywhere.
+- **No unit conversion.** The unit (`settings.unit`, always UK mmol/L now) is used as-is;
+  no ×/÷ 18.0182 anywhere. mg/dL is dropped from the setup UI (Session 14) but the
+  `GlucoseUnit` enum + `AppSettings.unit` field stay for JSON/data compatibility.
 - Shared hooks live on `AppModel`, not in views: `confirmReading(_:)` (fires only after a
   band matches), `shouldStartFreshEntry` (open-entry intent for widget/notification taps), and
   `commitSettings(_:)` (setup "Done" — persists + updates live state in one place).
@@ -76,5 +84,10 @@ Scripts/GenerateAppIcon.swift  – Swift+CoreGraphics renderer for the app icon 
   `group.uk.co.zlurgg.Jinsula`** (capability on both targets). The `jinsula://` scheme is
   registered in the app's Info.plist (`CFBundleURLTypes`) — without it the widget/notification
   deep link is a silent no-op.
+- **Widget needs the App-Group entitlement embedded** or its shared container is `nil` and it
+  shows only "Tap to check your sugar". CLI builds with `CODE_SIGNING_ALLOWED=NO` (or any build
+  while Xcode `-1009` persists) **strip** `application-groups` → widget goes dark. Fix: press Run
+  in Xcode (embeds it locally), or re-sign manually: `codesign -f -s - --entitlements <plist>` the
+  `.appex` then the `.app`. See KICKOFF open questions.
 - Tests: Swift Testing framework (target `JinsulaTests`); `ReminderService` covered — inject the
   `UserNotificationScheduling` seam with a spy rather than hitting the real notification centre.

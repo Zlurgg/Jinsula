@@ -19,6 +19,11 @@ enum Theme {
     // See SPEC.md open question "Amber high band contrast".
     static let high      = Color(red: 0.64, green: 0.40, blue: 0.02) // amber
 
+    // MARK: Action colour (buttons)
+    // Deliberately outside the band palette so a button never reads as a
+    // guidance colour (red/orange/green/amber all carry band meaning).
+    static let action    = Color(red: 0.00, green: 0.45, blue: 0.80) // blue
+
     static func colour(for severity: GuidanceBand.Severity) -> Color {
         switch severity {
         case .emergency: return emergency
