@@ -5,56 +5,45 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## State
 
-- **Reminder-finish is PLANNED, not built (Session 10, planning-only).** The plan lives in
-  SPEC.md → "Retest reminder + widget" §1 ("Finish plan (Session 10)"): three pieces — (1) a
-  `UNUserNotificationCenterDelegate` via `@UIApplicationDelegateAdaptor` (foreground banner +
-  tap → the shared open-entry intent, reusing the widget path; tap also cancels the survivor),
-  (2) the Session-4 setup **Reminders toggle** (new `AppSettings.remindersEnabled`), and
-  (3) removing the DEBUG 8s/16s interval. No code was written.
-- **Two decisions recommended but UNCONFIRMED** — confirm at the top of the build session:
-  (a) toggle default = **ON + gates scheduling**; (b) DEBUG interval **removed entirely**.
-- **Already built (Session 9):** the `systemMedium` widget (App Group `group.uk.co.zlurgg.Jinsula`,
-  `WidgetSnapshot`, `jinsula://check`) and `ReminderService` scheduling (+15/+30 min, fixed IDs)
-  wired into `AppModel` + unit-tested (`ReminderServiceTests`).
-- **⚠️ DEBUG reminder interval = 8s/16s** still ships in every Debug build (`ReminderService.defaultIntervals`,
-  `#if DEBUG`); the plan removes it. Release already uses 15/30 min.
+- **Retest reminder is DONE (Session 11).** All three finish pieces built and **verified on the
+  iPad simulator**: (1) `AppDelegate` notification delegate (foreground banner + tap → blank entry
+  and cancels the survivor), (2) setup **Reminders** toggle (`AppSettings.remindersEnabled`, default
+  ON, gates scheduling), (3) DEBUG 8s/16s interval **removed** — every build now uses real 15/30 min.
+  Both open decisions were confirmed (toggle default ON + gates; DEBUG removed entirely).
+- **Tests extended but UNRUN.** `ReminderServiceTests` now covers flag-off no-op, the tap handler,
+  and the 15/30 default. The local **test target can't run — device code-signing fails** (login
+  `-1009`, no provisioning profiles); the app itself builds + runs fine on the Simulator.
+- **Everything prior still stands:** daily-use screen, result card, setup (units/bands/contacts/
+  Lock-PIN + now Reminders), PIN gate, `systemMedium` widget (App Group + `WidgetSnapshot`),
+  `jinsula://check` deep link.
 
 ## Next session — pick one
 
-1. **Build the reminder finish (default).** Implement the Session 10 plan above. Confirm the two
-   open decisions first, then: `AppDelegate`/delegate, `AppModel.handleRetestNotificationTap()`,
-   `remindersEnabled` + setup toggle, drop the DEBUG interval, extend the tests.
-2. **App icon pass.** Still the Xcode default — replace with a real icon (asset + all sizes). Short session.
-3. **On-device verification (iPad handover).** Widget renders a real reading's colour/time; a reminder
-   actually fires (banner + tap → blank entry); `tel:` dialling on hardware.
+1. **App icon pass (default).** Still the Xcode placeholder — design/add a real `AppIcon` asset
+   (all required sizes). Self-contained, no hardware needed. Short session.
+2. **On-device verification (iPad handover).** Confirm on physical hardware what the Simulator
+   can't: `tel:` dialling actually calls, the widget renders a real reading's colour/time from the
+   Home-Screen gallery, and a reminder fires + taps through on a real device.
+3. **Run the test suite once signing/network is restored** — the three new `ReminderServiceTests`
+   cases (and the whole target) have never executed. Quick if the environment cooperates.
 
 Deferred to **v2:** `ReadingsStore` JSON persistence (logged readings surviving relaunch).
 
 ## Load in
 
-- **Build the reminder finish:**
-  - SPEC.md → "Retest reminder + widget" §1, the "Finish plan (Session 10)" block (the full design +
-    the two decisions to confirm).
-  - `Services/ReminderService.swift` (drop the DEBUG override; add an `authorizationStatus()` to the
-    `UserNotificationScheduling` seam); `ViewModels/AppModel.swift` (add `handleRetestNotificationTap()`;
-    gate `scheduleRetestReminder()` on the flag); `JinsulaApp.swift` (where the `AppDelegate` hangs) +
-    `ContentView.swift` (wire `appDelegate.model`; update the stale "Session 3" comment on `onOpenURL`).
-  - `Models/AppSettings.swift` (add `remindersEnabled`, Codable-tolerant of old JSON);
-    `Views/SetupView.swift` (Reminders section between Contacts and Lock).
-  - `JinsulaTests/ReminderServiceTests.swift` (extend the spy + new cases).
 - **App icon:** `Jinsula/Jinsula/Assets.xcassets/AppIcon.appiconset`.
-- **On-device verification:** no files — manual (widget gallery add, real reading, reminder fire, dial).
+- **On-device verification:** no files — manual (widget gallery add, real reading, reminder fire +
+  tap, `tel:` dial). SPEC.md → "Retest reminder + widget" §1–§2 for the expected behaviours.
+- **Run the test suite:** `JinsulaTests/ReminderServiceTests.swift`; fix Xcode's signing/account
+  first (the `-1009` login + missing `uk.co.zlurgg.Jinsula` profile), or run against a simulator
+  destination that needs no signing.
 
 ## Open questions
 
-- **Toggle default + semantics** — recommended **ON + gates scheduling**; alternatives are off-by-default
-  or permission-opt-in-only. Unconfirmed.
-- **DEBUG 8s interval** — recommended **removed entirely** (always 15/30). Unconfirmed; still ships in
-  Debug builds until done.
-- **Notification foreground presentation + tap→open-entry** — planned, not built; unverified on device.
-- **Widget Home-Screen render is unverified** — deep-link routing confirmed; the widget actually showing
-  a real reading's colour/time needs a manual gallery-add (iPad handover).
-- **Call button dialling unverified** — `tel:` URLs no-op in the Simulator; confirm on the physical iPad.
+- **Test target has never run** — signing blocks it; the three new cases are unverified in CI/local.
+- **On-device unknowns remain:** `tel:` dialling no-ops in the Simulator; the widget's Home-Screen
+  render (colour/time from a real reading) is confirmed only via deep-link routing, not a gallery add;
+  reminder fire + tap verified on the *simulator* only, not physical hardware.
 - **OS-floor (iOS 15) sign-off is physical-6s-only** — no iOS ≤15 simulator runtime on this Xcode.
-- **Interactive PIN + setup flow still unverified** — no UI-test target; a UI-test target would make the
-  iPad end-to-end check replayable.
+- **Interactive PIN + setup flow still unverified** — no UI-test target; one would make the iPad
+  end-to-end check replayable.

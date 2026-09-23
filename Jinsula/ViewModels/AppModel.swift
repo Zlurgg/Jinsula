@@ -9,6 +9,7 @@
 import SwiftUI
 import Combine
 import WidgetKit
+import UserNotifications
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -82,10 +83,33 @@ final class AppModel: ObservableObject {
     /// schedules the +15/+30 min nudges. Fire-and-forget: the card dismisses
     /// immediately whether or not permission is granted (SPEC §1).
     func scheduleRetestReminder() {
+        guard settings.remindersEnabled else { return }
         Task {
             await reminderService.requestAuthorization()
             await reminderService.scheduleRetest()
         }
+    }
+
+    /// Called by the notification delegate when grandma taps a retest nudge.
+    /// Reuses the widget's open-entry path (lands on a blank entry) **and**
+    /// cancels the surviving nudge, so the second reminder never fires after
+    /// she's already engaged (SPEC.md "Retest reminder + widget" §1).
+    func handleRetestNotificationTap() {
+        shouldStartFreshEntry = true
+        reminderService.cancelRetest()
+    }
+
+    /// Requests notification permission up front when the setup Reminders toggle
+    /// is switched on (SPEC §1 permission timing). Fire-and-forget from the view.
+    @discardableResult
+    func requestReminderAuthorization() async -> Bool {
+        await reminderService.requestAuthorization()
+    }
+
+    /// Current notification permission, so the setup toggle can hint at iOS
+    /// Settings when notifications are off for Jinsula.
+    func reminderAuthorizationStatus() async -> UNAuthorizationStatus {
+        await reminderService.authorizationStatus()
     }
 
     /// Clears the open-entry intent after `DailyUseView` has consumed it.

@@ -24,6 +24,9 @@ struct SetupView: View {
     @State private var showResetConfirm = false
     /// Presents the PIN pad in "set" mode from the Lock section.
     @State private var showingSetPIN = false
+    /// Mirrors the iOS notification permission so the Reminders section can hint
+    /// at Settings when notifications are switched off for Jinsula.
+    @State private var remindersDenied = false
 
     init(settings: AppSettings) {
         _working = State(initialValue: SetupView.normalised(settings))
@@ -57,8 +60,10 @@ struct SetupView: View {
                 detailSection
                 previewSection
                 contactsSection
+                remindersSection
                 lockSection
             }
+            .task { await refreshRemindersStatus() }
             .navigationTitle("Setup")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -257,6 +262,39 @@ struct SetupView: View {
                 Text("The first contact is the one the daily “Call” button dials.")
             }
         }
+    }
+
+    // MARK: - Reminders
+
+    /// The retest-reminder opt-out. On is the safe default (SPEC.md §1); turning
+    /// it on requests notification permission up front. If permission is denied,
+    /// the footer points at iOS Settings — the toggle alone can't grant it.
+    private var remindersSection: some View {
+        Section {
+            Toggle("Remind me to retest", isOn: $working.remindersEnabled)
+                .onChange(of: working.remindersEnabled) { enabled in
+                    guard enabled else { return }
+                    Task {
+                        await model.requestReminderAuthorization()
+                        await refreshRemindersStatus()
+                    }
+                }
+        } header: {
+            Text("Reminders")
+        } footer: {
+            if working.remindersEnabled && remindersDenied {
+                Text("Notifications are turned off for Jinsula, so the retest reminder can't appear. Turn them on in the Settings app under Notifications › Jinsula.")
+                    .foregroundColor(Theme.emergency)
+            } else {
+                Text("After a low reading, Jinsula reminds you to test again in 15 minutes. The reminder always says to eat sugar — never insulin.")
+            }
+        }
+    }
+
+    /// Reads the current permission so the denied hint reflects reality on open
+    /// and right after the toggle requests access.
+    private func refreshRemindersStatus() async {
+        remindersDenied = await model.reminderAuthorizationStatus() == .denied
     }
 
     // MARK: - Lock (setup PIN)

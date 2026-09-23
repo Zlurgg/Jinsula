@@ -17,6 +17,7 @@ private final class SpyNotificationCenter: UserNotificationScheduling {
     var addedRequests: [UNNotificationRequest] = []
     var removedIdentifiers: [String] = []
     var authorizationRequested = false
+    var authorizationStatusToReturn: UNAuthorizationStatus = .authorized
 
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
         authorizationRequested = true
@@ -30,6 +31,31 @@ private final class SpyNotificationCenter: UserNotificationScheduling {
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
         removedIdentifiers.append(contentsOf: identifiers)
     }
+
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        authorizationStatusToReturn
+    }
+}
+
+/// In-memory doubles so `AppModel` can be exercised without touching disk or
+/// the Keychain.
+private final class FakeSettingsStore: SettingsStoring {
+    var stored: AppSettings
+    init(_ settings: AppSettings) { stored = settings }
+    func load() -> AppSettings { stored }
+    func save(_ settings: AppSettings) { stored = settings }
+}
+
+private final class FakeReadingsStore: ReadingsStoring {
+    func load() -> [GlucoseReading] { [] }
+    func append(_ reading: GlucoseReading) {}
+}
+
+private final class FakePINStore: PINStoring {
+    var hasPIN = false
+    func setPIN(_ pin: String) { hasPIN = true }
+    func verify(_ pin: String) -> Bool { false }
+    func clear() { hasPIN = false }
 }
 
 @Suite("ReminderService")
@@ -87,5 +113,47 @@ struct ReminderServiceTests {
         let body = spy.addedRequests.first?.content.body ?? ""
         #expect(body.contains("eat sugar"))
         #expect(body.contains("do not take insulin"))
+    }
+
+    @Test("the shipped default intervals are the real 15 and 30 minutes")
+    func defaultIntervalsAreFifteenAndThirty() {
+        // The DEBUG 8s/16s override was removed (SPEC §1 finish) — every build
+        // uses the true quarter-hour cadence.
+        #expect(ReminderService.defaultIntervals == [15 * 60, 30 * 60])
+    }
+
+    @MainActor
+    @Test("scheduleRetestReminder no-ops when the reminders toggle is off")
+    func schedulingHonoursTheOffToggle() {
+        let spy = SpyNotificationCenter()
+        var settings = AppSettings.default
+        settings.remindersEnabled = false
+        let model = AppModel(settingsStore: FakeSettingsStore(settings),
+                             readingsStore: FakeReadingsStore(),
+                             pinStore: FakePINStore(),
+                             reminderService: ReminderService(center: spy))
+
+        model.scheduleRetestReminder()
+
+        // The guard returns before spawning any work — nothing scheduled, no
+        // permission prompt.
+        #expect(spy.addedRequests.isEmpty)
+        #expect(!spy.authorizationRequested)
+    }
+
+    @MainActor
+    @Test("a retest-notification tap opens a fresh entry and cancels the survivor")
+    func tapOpensFreshEntryAndCancels() {
+        let spy = SpyNotificationCenter()
+        let model = AppModel(settingsStore: FakeSettingsStore(.default),
+                             readingsStore: FakeReadingsStore(),
+                             pinStore: FakePINStore(),
+                             reminderService: ReminderService(center: spy))
+
+        model.handleRetestNotificationTap()
+
+        #expect(model.shouldStartFreshEntry)
+        #expect(Set(spy.removedIdentifiers) == [ReminderService.firstIdentifier,
+                                                ReminderService.secondIdentifier])
     }
 }

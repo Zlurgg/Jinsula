@@ -12,7 +12,8 @@ Models/
   GuidanceBand.swift     – "rules as data": range → colour/message/action
                            (+ default UK bands; SAFETY notes inline)
   BandEvaluator.swift    – pure fn: reading + [bands] → matched band (testable)
-  AppSettings.swift      – all setup config + EmergencyContact; isLocked flag
+  AppSettings.swift      – all setup config + EmergencyContact; isLocked + remindersEnabled
+                           (default ON; tolerant decoder for pre-toggle JSON)
   WidgetSnapshot.swift   – shared {value, unitLabel, date, severity} + App-Group read/write
                            (member of BOTH app + JinsulaWidget targets)
 ViewModels/
@@ -21,20 +22,24 @@ Services/
   SettingsStore.swift    – JSON persistence for settings (real: atomic, safe-fallback)
   ReadingsStore.swift    – JSON persistence for readings (stub)
   PINStore.swift         – Keychain wrapper for the setup PIN (injectable; not in JSON)
-  ReminderService.swift  – UNUserNotificationCenter retest nudges (+15/+30 min, fixed IDs);
-                           injectable seam + intervals (⚠️ 8s/16s in DEBUG). Unit-tested.
+  ReminderService.swift  – UNUserNotificationCenter retest nudges (+15/+30 min always, fixed IDs);
+                           injectable seam (+ authorizationStatus()) + intervals. Unit-tested.
+                           Scheduling gated on AppSettings.remindersEnabled via AppModel.
   SpeechService.swift    – AVSpeechSynthesizer wrapper (.playback, en-GB, speaks 2 lines)
 Views/
   DailyUseView.swift     – grandma's everyday screen: custom keypad → card (BUILT)
   ResultCardView.swift   – full-screen colour guidance card, renders from band (BUILT)
   SetupView.swift        – family-only config: Form editing a working copy, commit-on-Done
-                           (bands/units/contacts + Lock/PIN section BUILT)
+                           (bands/units/contacts + Reminders toggle + Lock/PIN section BUILT)
   PINEntryView.swift     – 4-digit PIN pad (.unlock/.set) + SetupGateView (gates the ⋯ door)
   HistoryView.swift      – past readings list (placeholder)
 Theme/
   Theme.swift            – all fonts + band colours
-ContentView.swift        – root (currently → DailyUseView); onOpenURL(jinsula://) → fresh entry
-JinsulaApp.swift         – @main, injects AppModel via .environmentObject
+ContentView.swift        – root (currently → DailyUseView); onOpenURL(jinsula://) → fresh entry;
+                           onAppear wires AppDelegate.model for notification-tap routing
+JinsulaApp.swift         – @main, injects AppModel via .environmentObject; hosts AppDelegate
+                           (@UIApplicationDelegateAdaptor) = UNUserNotificationCenter delegate:
+                           foreground banner + tap → AppModel.handleRetestNotificationTap()
 ```
 
 Other targets (siblings of `Jinsula/Jinsula/`):

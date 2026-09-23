@@ -23,25 +23,30 @@ protocol UserNotificationScheduling {
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
     func add(_ request: UNNotificationRequest) async throws
     func removePendingNotificationRequests(withIdentifiers identifiers: [String])
+    /// Current notification permission, so the setup Reminders toggle can show
+    /// an iOS-Settings hint when notifications are switched off for the app.
+    func authorizationStatus() async -> UNAuthorizationStatus
 }
 
-extension UNUserNotificationCenter: UserNotificationScheduling {}
+extension UNUserNotificationCenter: UserNotificationScheduling {
+    /// Bridged from the completion-handler API (iOS 15-safe) — reads just the
+    /// authorization status the setup toggle needs.
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        await withCheckedContinuation { continuation in
+            getNotificationSettings { continuation.resume(returning: $0.authorizationStatus) }
+        }
+    }
+}
 
 final class ReminderService {
     /// Fixed identifiers so only ever one pair is pending — a re-tap replaces.
     static let firstIdentifier = "uk.co.zlurgg.Jinsula.retest.1"
     static let secondIdentifier = "uk.co.zlurgg.Jinsula.retest.2"
 
-#if DEBUG
-    // TESTING AFFORDANCE — short nudges so the full retest flow can be observed
-    // on a device/simulator in seconds instead of waiting a quarter hour. This
-    // applies to ALL Debug builds (including one side-loaded onto the iPad), so
-    // it must be replaced by a real, user-visible setting in the dedicated
-    // reminders session before release. Release builds use the true 15/30 min.
-    static let defaultIntervals: [TimeInterval] = [8, 16]
-#else
+    /// Seconds-from-now for the two nudges: +15 min, then +30 min. Used by every
+    /// build — the old `#if DEBUG` 8s/16s override was removed so no test-only
+    /// timing can ship (SPEC.md "Retest reminder + widget" §1, Session 10 finish).
     static let defaultIntervals: [TimeInterval] = [15 * 60, 30 * 60]
-#endif
 
     private let center: UserNotificationScheduling
     /// Seconds-from-now for each nudge. Injectable so tests assert exact values.
@@ -59,6 +64,13 @@ final class ReminderService {
     @discardableResult
     func requestAuthorization() async -> Bool {
         (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+    }
+
+    /// The app's current notification permission — surfaced to the setup
+    /// Reminders toggle so it can hint at iOS Settings when notifications are
+    /// off for Jinsula.
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        await center.authorizationStatus()
     }
 
     /// Schedules the two non-repeating nudges, clearing any existing pair first

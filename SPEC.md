@@ -215,7 +215,10 @@ condition on which all three plans integrate cleanly; keep views dumb.
 - **Tap handling:** `UNUserNotificationCenterDelegate` (wired via `UIApplicationDelegateAdaptor`)
   → the shared open-entry intent. Foreground: present banner + sound if the app is open when
   it fires.
-- **Finish plan (Session 10, planning) — three pieces, no band logic:**
+- **BUILT (Session 11) — three pieces, no band logic. Verified on the iPad simulator**
+  (low reading → retest button → permission prompt → foreground banner + sound → tap opens a
+  blank entry and cancels the survivor; the setup toggle gates scheduling). Both open decisions
+  were **confirmed: (a) toggle default = ON + gates scheduling; (b) DEBUG interval removed entirely.**
   1. **Notification delegate.** An `AppDelegate` via `@UIApplicationDelegateAdaptor` sets itself as
      the `UNUserNotificationCenter` delegate in `didFinishLaunching`; it holds a `weak var model`
      wired by `ContentView.onAppear`. Foreground `willPresent` returns `[.banner, .sound]` — a
@@ -231,12 +234,12 @@ condition on which all three plans integrate cleanly; keep views dumb.
      shows an iOS-Settings hint (needs an `authorizationStatus()` added to the injectable
      `UserNotificationScheduling` seam). `AppModel.scheduleRetestReminder()` no-ops when the flag
      is off, so an explicit "off" is honoured.
-  3. **DEBUG interval.** Remove the `#if DEBUG` 8s/16s override so every build uses the real
-     15/30 min — retires the "8s ships in Debug" hazard outright.
-  - **Two decisions recommended but UNCONFIRMED** (confirm at the top of the build session):
-    (a) toggle default = **ON + gates scheduling**; (b) DEBUG interval **removed entirely**.
-  - **Tests** extend `ReminderServiceTests`: flag-off `scheduleRetestReminder` no-ops; the tap
-    handler sets `shouldStartFreshEntry` **and** cancels pending; the interval is 15/30.
+  3. **DEBUG interval.** Removed the `#if DEBUG` 8s/16s override — every build now uses the real
+     15/30 min, retiring the "8s ships in Debug" hazard outright.
+  - **Tests** (`ReminderServiceTests`) now also cover: flag-off `scheduleRetestReminder` no-ops
+    (no schedule, no prompt); the tap handler sets `shouldStartFreshEntry` **and** cancels both
+    pending nudges; `defaultIntervals == [15·60, 30·60]`. (Test run still pending — device signing
+    blocks the local test target; the app itself builds and runs on the simulator.)
 
 ### 2. Home Screen widget (shows last reading, tap opens entry)
 - **New Widget Extension target** (WidgetKit + SwiftUI).
@@ -282,7 +285,9 @@ validates, commits through `AppModel` → `SettingsStore`, relocks, returns to d
 - **BUILT (Session 7).** §0–§3 shipped: the `Form`, working-copy + commit-on-Done via
   `AppModel.commitSettings(_:)`, boundary editor + live preview + reset, units picker, and
   the contacts editor. `SettingsStore` is now real JSON.
-- **BUILT (Session 8).** §5 Lock/PIN shipped (see §5 note). **Deferred:** §4 Reminders toggle.
+- **BUILT (Session 8).** §5 Lock/PIN shipped (see §5 note).
+- **BUILT (Session 11).** §4 Reminders section shipped (toggle between Emergency contacts and
+  Lock; requests permission on enable, hints at iOS Settings when denied).
 
 ### 1. Band editing — DECIDED: edit boundaries only
 - The five bands are **fixed in count, severity, action, and headline**. Family edits only the
