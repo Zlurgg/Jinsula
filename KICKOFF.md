@@ -32,9 +32,12 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## Next session — pick one
 
-1. **On-device verification (iPad handover) — needs the `-1009` fix first.** Confirm on hardware:
-   new icon installs, `tel:` dials, widget renders a real reading, a reminder fires + taps through.
-   The widget only works if the install carries the App-Group entitlement (see re-sign note).
+1. **On-device verification (iPad handover).** No App Store / publishing needed — this is a direct
+   personal-use install. Plug the iPad in and just try a device build; if a signing profile doesn't
+   mint, sidestep it (manual profile from the developer portal + manual signing) or fix `-1009`.
+   Then confirm on hardware: new icon installs, `tel:` dials, widget renders a real reading, a
+   reminder fires + taps through. (The widget's App Group won't provision on a **free** Personal
+   Team — that piece needs the paid Developer Program, or drop the widget for the free path.)
 2. **Run the test suite** — `ReminderServiceTests` has never executed; unblock via the `-1009` fix
    or a no-signing iOS Simulator destination.
 3. **Wheel polish / iteration** — drag sensitivity (`pointsPerUnit` = 52), top/bottom square
@@ -58,15 +61,19 @@ the full session roadmap; `CLAUDE.md` for the codebase map.
 
 ## Open questions
 
-- **Xcode `-1009`** blocks device builds + the local test target, and now also strips the
-  App-Group entitlement from CLI simulator builds (widget goes dark). Durable fix = Xcode Accounts
-  re-auth / restart `akd`; until then either press Run in Xcode or manually re-sign after each CLI
-  build. `-1009` = `NSURLErrorNotConnectedToInternet` from the account daemon even though the Mac
-  reaches Apple fine.
-- **Publish vs sideload decision (needed before on-device handover):** a **free Personal Team
-  cannot provision App Groups** (so the widget won't work on a real device) and its signing
-  **expires every 7 days**; the **paid Developer Program ($99/yr)** keeps the widget, gives 1-year
-  signing, and unlocks TestFlight for remote updates. Free-path fallback = drop the widget/App Group.
+- **No App Store / publishing is needed** — grandma's device gets a direct personal-use install.
+  Device install still needs *some* valid signing profile (a **free Personal Team is fine**), and
+  minting one via Xcode is what `-1009` currently breaks — but that's sidesteppable (manual profile
+  + manual signing, a cached profile, or the error being transient). So on-device verification is
+  **not hard-gated on `-1009`**; first just try a device build. `-1009` also strips the App-Group
+  entitlement from CLI simulator builds (widget goes dark) — press Run in Xcode or re-sign manually.
+  Durable fix = Xcode Accounts re-auth / restart `akd`. (`-1009` = `NSURLErrorNotConnectedToInternet`
+  from the account daemon even though the Mac reaches Apple fine.)
+- **Widget on a real device → paid team, or drop it.** A **free Personal Team cannot provision App
+  Groups**, so the widget won't work (and its entitlement can fail the install); free-team signing
+  also **expires every 7 days**. The **paid Developer Program ($99/yr)** keeps the widget, gives
+  1-year signing, and unlocks TestFlight. Free-path fallback = remove the widget/App Group. This is
+  the only real decision before handover — the app itself installs fine on a free team.
 - **Wheel drag feel** unverified for the full 1–33 range (`pointsPerUnit` = 52); nudge buttons hedge
   it. Two-wheel picker is the easy fallback if drag feels fiddly.
 - **Interactive PIN + setup flow still unverified** — no UI-test target.
