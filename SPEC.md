@@ -215,6 +215,28 @@ condition on which all three plans integrate cleanly; keep views dumb.
 - **Tap handling:** `UNUserNotificationCenterDelegate` (wired via `UIApplicationDelegateAdaptor`)
   → the shared open-entry intent. Foreground: present banner + sound if the app is open when
   it fires.
+- **Finish plan (Session 10, planning) — three pieces, no band logic:**
+  1. **Notification delegate.** An `AppDelegate` via `@UIApplicationDelegateAdaptor` sets itself as
+     the `UNUserNotificationCenter` delegate in `didFinishLaunching`; it holds a `weak var model`
+     wired by `ContentView.onAppear`. Foreground `willPresent` returns `[.banner, .sound]` — a
+     low-sugar nudge must never be silently swallowed. Tap `didReceive` calls a new
+     `AppModel.handleRetestNotificationTap()` that sets `shouldStartFreshEntry` (reusing the
+     widget's open-entry path, so `DailyUseView` dismisses the card + clears the field) **and**
+     cancels the surviving nudge (§1: "tapping the first notification cancels the second").
+     Cold-launch taps arriving before the model is wired are harmless — the app already opens on
+     a blank entry.
+  2. **Setup Reminders toggle (Setup §4).** New `AppSettings.remindersEnabled` (Codable; decoder
+     tolerates old JSON lacking the key). Setup gains a **Reminders** section (between Emergency
+     contacts and Lock); turning it on calls `requestAuthorization()` up front, and a denied state
+     shows an iOS-Settings hint (needs an `authorizationStatus()` added to the injectable
+     `UserNotificationScheduling` seam). `AppModel.scheduleRetestReminder()` no-ops when the flag
+     is off, so an explicit "off" is honoured.
+  3. **DEBUG interval.** Remove the `#if DEBUG` 8s/16s override so every build uses the real
+     15/30 min — retires the "8s ships in Debug" hazard outright.
+  - **Two decisions recommended but UNCONFIRMED** (confirm at the top of the build session):
+    (a) toggle default = **ON + gates scheduling**; (b) DEBUG interval **removed entirely**.
+  - **Tests** extend `ReminderServiceTests`: flag-off `scheduleRetestReminder` no-ops; the tap
+    handler sets `shouldStartFreshEntry` **and** cancels pending; the interval is 15/30.
 
 ### 2. Home Screen widget (shows last reading, tap opens entry)
 - **New Widget Extension target** (WidgetKit + SwiftUI).
